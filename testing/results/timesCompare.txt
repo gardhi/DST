@@ -1,0 +1,17 @@
+
+Before Inline of cycles_to_failure
+----------------------------------
+>> main
+Elapsed time is 0.271176 seconds.
+>> main
+Elapsed time is 0.272329 seconds.
+>> main
+Elapsed time is 0.268855 seconds.
+>> 
+
+
+Compare Rewrite Performance
+---------------------------------
+>>
+Elapsed time is 0.279688 seconds.
+Elapsed time is 0.364680 seconds.

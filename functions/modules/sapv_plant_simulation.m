@@ -1,0 +1,206 @@
+function [ simOutput ] = sapv_plant_simulation( SimParam, PvParam, BattParam, InvParam, InData)
+%SAPVPLANTSIMULATION Simulates the Battery and PV dynamics based on load
+%and pv simulation input. SAPV stands for stand-alone PV
+%   for each pair of battery size and pv size, the simulation runs the
+%   entire span of hours in the inputData struct. These are assumeed
+%   synchronized (they represent the data at same times, no time offset).
+
+% Declaration of simulation variables
+[pvPowerAbsorbedUnused, lossOfLoad, stateOfCharge,...
+ battOutputKw]...
+= deal(zeros(InData.nHours, SimParam.nPvSteps, SimParam.nBattSteps));
+
+[sumPartialCyclesUsed, lossOfLoadTot, lossOfLoadProbability]...
+ = deal(zeros( SimParam.nPvSteps, SimParam.nBattSteps)); 
+
+[pvPowerAbsorbed, neededBattOutputKw ] = deal(zeros(InData.nHours,SimParam.nPvSteps));
+
+% Cell temperature as function of ambient temperature [C]
+PvTemperature = InData.temperature...
+            + InData.irradiation ...
+            .* (PvParam.nominalCellTemperatureC ...
+            - PvParam.nominalAmbientTemperatureC)...
+            / PvParam.nominalIrradiation;                          
+
+% cell efficiency as function of temperature
+cellEfficiency = 1 - PvParam.powerDerateDueTemperature ...
+                 .* (PvTemperature - PvParam.nominalAmbientTemperatureC);   
+
+%% Plant simulation
+% iterate over all PV power sizes from pvStartKw to pvStopKw
+for iPv = 1 : SimParam.nPvSteps
+
+    % the output kw for this size of pv
+    iPvKw = SimParam.pv_step_to_kw(iPv - 1);              
+
+    % array with Energy from the PV for each time step throughout the year.
+    % see p.191 of thesis Stefano Mandelli
+    pvPowerAbsorbed(:,iPv) = InData.irradiation ...
+                          .* iPvKw ...
+                          .* cellEfficiency ...
+                          .* PvParam.balanceOfSystem;         
+
+    % The demand from the grid that is not met by the PV output.
+    % if negative, the battery can charge
+    neededBattOutputKw(:,iPv) =  InData.load ...
+                              / InvParam.efficiency...
+                              - pvPowerAbsorbed(:,iPv)';        
+
+    % iterate over all battery capacities from min_batt to max_batt
+    for jBatt = 1 : SimParam.nBattSteps                                               
+        
+        % the battery kwh capacity of this battery step
+        jBattKwh = SimParam.batt_step_to_kwh(jBatt - 1);  
+        
+        stateOfCharge(1,iPv,jBatt) = BattParam.initialStateOfCharge;            
+        
+        battMaxPowerFlow = BattParam.powerEnergyRatio...
+                           * jBattKwh;                    
+                                                                                                             
+        % iterate through the timesteps of one year
+        for t = 1 : InData.nHours                                    
+            if t > 8 
+                if neededBattOutputKw(t-1,iPv) > 0 ...
+                && neededBattOutputKw(t-2,iPv) > 0 ...
+                && neededBattOutputKw(t-3,iPv) > 0 ...
+                && neededBattOutputKw(t-4,iPv) > 0 ...
+                && neededBattOutputKw(t-5,iPv) > 0 ...
+                && neededBattOutputKw(t-6,iPv) > 0 ...
+                && neededBattOutputKw(t-7,iPv) > 0 ...
+                && neededBattOutputKw(t-8,iPv) > 0 ...
+                && neededBattOutputKw(t,iPv) < 0
+                % battery has been discharged consistently the previous
+                % 8 hours and is now charging.
+                   
+                   % Depth of Discharge is the opposite of State of Charge
+                   depthOfDischarge = 1 - stateOfCharge(t,iPv,jBatt);            
+                   
+                   nMaxPartialCycles = cycles_to_failure(depthOfDischarge);
+                   
+                   sumPartialCyclesUsed(iPv, jBatt) ...
+                                    = sumPartialCyclesUsed(iPv, jBatt)...
+                                    + 1/(nMaxPartialCycles);
+                end
+            end
+
+            % CHARGING the battery
+            % PV-production is larger than Load. Battery will be charged
+            if neededBattOutputKw(t,iPv) < 0   
+                
+                % energy flow that will be stored in the battery i.e. 
+                % including losses in charging [kWh]   
+                battOutputKw(t, iPv, jBatt) = neededBattOutputKw(t,iPv) ...
+                            * BattParam.chargingEfficiency;    
+               
+                % in-flow exceeds the battery power limit
+                if (abs(neededBattOutputKw(t,iPv))) > battMaxPowerFlow...
+                && stateOfCharge(t,iPv,jBatt) < 1                          
+                    
+                    battOutputKw(t, iPv, jBatt) = battMaxPowerFlow ...
+                                * BattParam.chargingEfficiency;
+
+                    pvPowerAbsorbedUnused(t,iPv, jBatt) ...
+                                    = pvPowerAbsorbedUnused(t,iPv, jBatt) ...
+                                    + (abs(neededBattOutputKw(t,iPv))...
+                                    - battMaxPowerFlow);
+                end
+
+                stateOfCharge(t+1,iPv,jBatt) = stateOfCharge(t,iPv,jBatt) ...
+                                             + abs(battOutputKw(t, iPv, jBatt)) ...
+                                             / jBattKwh;
+                
+                if stateOfCharge(t+1,iPv,jBatt) > 1
+
+                    pvPowerAbsorbedUnused(t,iPv, jBatt) ...
+                                        = pvPowerAbsorbedUnused(t,iPv, jBatt)...
+                                        + (stateOfCharge(t+1,iPv,jBatt) - 1) ...
+                                        * jBattKwh ...
+                                        / BattParam.chargingEfficiency;
+                    
+                    stateOfCharge(t+1,iPv,jBatt) = 1;
+                  
+                end
+            
+            else
+                % DISCHARGING the battery
+                battOutputKw(t, iPv, jBatt) = neededBattOutputKw(t,iPv) ...
+                            / BattParam.dischargingEfficiency; 
+                % total energy flow from the battery i.e. including losses 
+                % in charging (positive number since discharging) [kWh]  
+                
+                % checking the battery kw output limit
+                if neededBattOutputKw(t,iPv) > battMaxPowerFlow ...
+                && stateOfCharge(t,iPv,jBatt) > BattParam.minStateOfCharge;         
+                    
+                    battOutputKw(t, iPv, jBatt) = battMaxPowerFlow ...
+                                    / BattParam.dischargingEfficiency;
+                    
+                    % Adding the part to lostLoad due to exceeding the 
+                    % battery discharging speed
+                    lossOfLoad(t,iPv, jBatt) = lossOfLoad(t,iPv, jBatt)...
+                                         + (neededBattOutputKw(t,iPv) ...
+                                         - battMaxPowerFlow)...
+                                         * InvParam.efficiency;     
+                end
+
+                stateOfCharge(t+1,iPv,jBatt) = stateOfCharge(t,iPv,jBatt) ...
+                                             - battOutputKw(t, iPv, jBatt) ...
+                                             / jBattKwh;
+
+                if stateOfCharge(t+1,iPv,jBatt) < BattParam.minStateOfCharge
+
+                    % adding the part to lostLoad due to not enough energy 
+                    % in battery (using that battery must stay at minStateOfCharge)
+                    lossOfLoad(t,iPv, jBatt) = lossOfLoad(t,iPv, jBatt) ...
+                                        + (BattParam.minStateOfCharge ...
+                                        - stateOfCharge(t+1,iPv,jBatt))...
+                                        * jBattKwh ...
+                                        * BattParam.dischargingEfficiency...
+                                        * InvParam.efficiency;     
+
+                    % the battery does not output the amount that exceeds
+                    % the minimum state of charge: (bugfix)
+                    battOutputKw(t,iPv,jBatt) = battOutputKw(t, iPv, jBatt)...
+                                              - (BattParam.minStateOfCharge ...
+                                              - stateOfCharge(t+1,iPv,jBatt))...
+                                              * jBattKwh;
+
+                    stateOfCharge(t+1,iPv,jBatt) = BattParam.minStateOfCharge;
+                    
+                end
+            end
+        end
+        
+        
+        lossOfLoadTot(iPv, jBatt) = sum(lossOfLoad(:,iPv,jBatt));                                                                  
+        
+        % Loss of Load Probability w.r.t. total load
+        lossOfLoadProbability(iPv, jBatt) = lossOfLoadTot(iPv, jBatt) ...
+                          / sum(InData.load, 2);               
+
+    end
+end
+
+
+simOutput = SimulationOutputs(...
+            pvPowerAbsorbed,...
+            neededBattOutputKw,...
+            battOutputKw,...
+            lossOfLoad,...
+            lossOfLoadTot,...
+            lossOfLoadProbability,...
+            pvPowerAbsorbedUnused,...
+            stateOfCharge,...
+            sumPartialCyclesUsed);
+
+end
+
+function [ c_f ] = inline_cycles_to_failure( DOD )
+
+% Calculates how many 
+
+c_f = 15790*exp(-11.96*DOD)+2633*exp(-1.699*DOD);
+
+end
+
+
