@@ -66,9 +66,9 @@ SimInputData = SimulationInputData('LoadCurve_normalized_single_3percent_100.mat
                                    'bhutan');
 
 % Control signals for script
-ProgramControl.simulate = false;
-ProgramControl.economicAnalysis = false;
-ProgramControl.llpConstrainedOptimums = false;
+ProgramControl.simulate = true;
+ProgramControl.economicAnalysis = true;
+ProgramControl.llpConstrainedOptimums = true;
 ProgramControl.plotStateOfCharge = false;
 ProgramControl.plotAverageStateOfCharge = false;
 ProgramControl.plotPowerBalance = false;
@@ -90,7 +90,7 @@ end
 
 if ProgramControl.economicAnalysis
 
-    EconomicOutput = bugged_economic_analysis( SimParameters,...
+    EconomicOutput = economic_analysis( SimParameters,...
                                 BattParam,...
                                 InvParam,...
                                 EcoParameters,...

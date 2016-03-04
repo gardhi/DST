@@ -1,4 +1,4 @@
-function nBattEmployed = get_worst_case_nBattEmployed( load, minSoc, plantLifetime )
+function [nBattEmployed, yearsBattOperational] = get_worst_case_batt_use( load, minSoc, plantLifetime )
 %GET_WORST_CASE_BATTERY_WEAR Summary of this function goes here
 %   Detailed explanation goes here
 
