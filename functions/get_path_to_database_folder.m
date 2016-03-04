@@ -1,4 +1,4 @@
-function [ path ] = get_path( desiredFolder )
+function [ path ] = get_path_to_database_folder( desiredFolder )
 %GETPATH Gets path of folder
 %   folder must be in the same folder as the main function
 

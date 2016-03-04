@@ -28,7 +28,7 @@ classdef SimulationInputData
                                            temperatureFilename,...
                                            folderName)
             obj.folderName = folderName;
-            obj.databasePath = get_path(folderName);
+            obj.databasePath = get_path_to_database_folder(folderName);
                                              
             obj.loadProfileFilename = loadProfileFilename;
             obj.irradiationFilename = irradiationFilename;
