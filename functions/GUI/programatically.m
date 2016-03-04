@@ -5,76 +5,34 @@ f = figure('Visible','off','Units','pixels',...
            'Position',[340,80,lFigWidth,lFigHeight],'menubar','none');
 
     
-% DEFAULT values 
-% Simulation Default Parameters:
-set.pvStartKw = '100';
-set.pvStopKw = '200';
-set.pvStepKw = '10';
-set.battStartKwh = '1200';
-set.battStopKwh = '1300';
-set.battStepKwh = '10';
-set.llpAccept = '5';
-set.llpStart = '1';
-set.llpStop = '80';
-set.llpStep = '5';
-  
-% Economic Default Parameters
-set.budget = '1500000';
-set.pvCostKw = '1000';
-set.battCostKwh = '140';              
-set.battCostFixed = '0';             
-set.inverterCostKw = '500';          
-set.operationMaintenanceCostKw = '50';
-set.installBalanceOfSystemCost = '2';%
-set.plantLifetime = '20';           
-set.interestRate = '6';%  
-
-%PV Default Parameters
-set.balanceOfSystem = '85';  %             
-set.nominalAmbientTemperatureC = '20';    % Nominal ambient test-temperature of the panels [C]
-set.nominalCellTemperatureC = '47';        % Nominal Operating Cell Temperature [C]
-set.nominalIrradiation = '0.8';           % Irradiation at nominal operation [kW / m^2]
-set.powerDerateDueTemperature = '0.004';  % Derating of panel's power due to temperature [/C]
-
-% Battery Default Parameters
-set.minStateOfCharge = '40'; %            
-set.initialStateOfCharge = '100'; %;             
-set.chargingEfficiency = '85'; % 
-set.dischargingEfficiency = '90'; %
-set.powerEnergyRatio = '0.5'; 
-set.maxOperationalYears = '5';  
-
-% Inverter Default Parameters
-set.invEfficiency = '90';
-
-
+set = init_default_set_values;
 
 % Margin metric
 lMargin = 10;
 lAlignEditText = 22;
-
-% Title
-lTitleHeight = 30;
-lTitleWidth = 300;
-lTitleStartY = lFigHeight - lMargin- lTitleHeight;
-uicontrol(f,'Style','text','String','Parameter Input',...
-           'Units','pixels','HorizontalAlignment','Left',...
-           'FontSize',16,...
-           'Position', [lMargin, lTitleStartY,...
-            lTitleWidth, lTitleHeight]);
-
 % Panel Metrics
 lNextRow = 45;
 lMultiLineAdjust3 = 10;
 lMultiLineAdjust2 = 5;
 lPanelEdge = 70;
 lPanelWidth = lFigWidth*0.35;
-
 % Text metrics
 lTextWidth = 80;
 lTextHeight = 40;
 
-% Presets
+%% Title
+lTitleHeight = 30;
+lTitleWidth = 300;
+lTitleStartY = lFigHeight - lMargin- lTitleHeight;
+uicontrol(f,'Style','text','String','Development Support Tool',...
+           'Units','pixels','HorizontalAlignment','Left',...
+           'FontSize',16,...
+           'Position', [lMargin, lTitleStartY,...
+            lTitleWidth, lTitleHeight]);
+
+
+
+%% Presets
 lPresetX = lPanelWidth*2+lMargin*1.7;
 lPresetWidth = lPanelWidth*0.7;
 lPresetTitleHeight = 0.7*lTitleHeight;
@@ -91,7 +49,6 @@ lPresetMenuHeight = 18;
 lPresetsMenuY = lPresetTitleY - lMargin - lPresetMenuHeight;
 
 % Put presets from presets directory into presetList
-newPresetName = 'default';
 presetFiles = '';
 presetList = '';
 update_presets_menu
@@ -117,19 +74,40 @@ h.NewPresetName = uicontrol(f,'Style','edit','String','default',...
                            'Units','pixels',...
                            'Position',[lPresetX,lNewPresetNameY,...
                            lPresetWidth,lPresetMenuHeight],...
-                           'HorizontalAlignment','Left',...
-                           'Callback', @newPresetName_Callback);
+                           'HorizontalAlignment','Left');
                        
 lSavePresetBtnY = lNewPresetNameY - lPresetMenuHeight - lMargin;
 h.SavePresetBtn = uicontrol(f, 'Style', 'pushbutton', 'String' , 'Save',...
                               'Units', 'pixels',...
                               'Position', [lPresetX, lSavePresetBtnY,...
                               lPresetWidth, lPresetMenuHeight],...
-                              'Callback', @savePresetBtn_Callback);
+                              'Callback', @savePresetBtn_Callback,...
+                              'BackgroundColor',[206 255 213]/255);
+ 
+lDeletePresetBtnY = lSavePresetBtnY - lPresetMenuHeight - lMargin;
+h.DeletePresetBtn = uicontrol(f, 'Style', 'pushbutton', 'String' , 'Delete',...
+                              'Units', 'pixels',...
+                              'Position', [lPresetX, lDeletePresetBtnY,...
+                              lPresetWidth, lPresetMenuHeight],...
+                              'Callback', @deletePresetBtn_Callback,...
+                              'BackgroundColor',[255 206 206]/255);
   
+%% Simulation Control
+
+lSimControlTitleHeight = 2*lPresetTitleHeight;
+lSimControlTitleY = lDeletePresetBtnY - lSimControlTitleHeight- lMargin;
+uicontrol(f, 'Style','text','String','Run Simulations:',...
+             'Units','pixels',...
+             'HorizontalAlignment','Left',...
+             'Fontsize',14,...
+             'Position',[lPresetX,lSimControlTitleY,...
+             lPresetWidth,lSimControlTitleHeight]);
+          
         
+%% Panels and parameter Input
+
 % SimPar Panel
-lNumberOfSimPar = 8;
+lNumberOfSimPar = 9;
 lSimParPanelHeight = lNextRow*(lNumberOfSimPar)+lPanelEdge;
 lSimParPanelY = lTitleStartY - lMargin- lSimParPanelHeight;
 
@@ -547,14 +525,14 @@ h.PowerDerateDueTemp = uicontrol(h.PvParamPanel,'Style','edit','String',...
 
 
 % Inverter Parameter Panel
-lInvParPanelHeight = lNextRow+14;
-lInvPanelStartY = lPvPanelStartY - lInvParPanelHeight +5;
+lInvParPanelHeight = lNextRow+ lMargin*2;
+lInvPanelStartY = lPvPanelStartY - lInvParPanelHeight;
 h.InvParamPanel = uipanel(f,'Title','Inverter Parameters',...
                   'Units','pixels',...
                   'Position',[lMargin+ lPanelWidth,lInvPanelStartY,...
                   lPanelWidth, lInvParPanelHeight]);   
  
-lTextY = lInvParPanelHeight-lPanelEdge+5;
+lTextY = lInvParPanelHeight-lPanelEdge;
 lEditY = lTextY + lAlignEditText;
 
 uicontrol(h.InvParamPanel,'Style','text','String','Efficiency [%]',...
@@ -568,55 +546,67 @@ h.InvEfficiency = uicontrol(h.InvParamPanel,'Style','edit','String',...
                     'Position',[lEditX, lEditY,...
                      lEditWidth,lEditHeight],...
                     'HorizontalAlignment','Center');            
+
 f.Visible = 'on';
 
-
-    function newPresetName_Callback(src, eventdata)
-       newPresetName = src.String;
-    end
-
+%% Callbacks
 
     function savePresetBtn_Callback(src, eventdata)
-         set.pvStartKw = h.PvStart.String;
-         set.pvStopKw = h.PvStop.String;
-         set.pvStepKw = h.PvStep.String;
-         set.battStartKwh = h.BattStart.String;
-         set.battStopKwh = h.BattStop.String;
-         set.battStepKwh = h.BattStep.String;
-         set.llpAccept = h.LlpAccept.String;
-         set.llpStart = h.LlpStart.String;
-         set.llpStop = h.LlpStop.String;
-         set.llpStep = h.LlpStep.String;          
-         set.budget = h.Budget.String;
-         set.pvCostKw = h.PvCost.String ;          
-         set.battCostKwh = h.BattCost.String;             
-         set.battCostFixed = h.BattCostFix.String;             
-         set.inverterCostKw = h.InverterCost.String;          
-         set.operationMaintenanceCostKw = h.OperationMaintenanceCost.String;           
-         set.installBalanceOfSystemCost = h.InstallBalanceOfSystemCost.String;             
-         set.plantLifetime = h.PlantLifetime.String;               
-         set.interestRate = h.InterestRate.String;            
-         set.balanceOfSystem = h.BalanceOfSystem.String;             
-         set.nominalAmbientTemperatureC = h.NominalAmbientTemp.String;              
-         set.nominalCellTemperatureC = h.NominalCellTemp.String;              
-         set.nominalIrradiation = h.NominalIrradiation.String;             
-         set.powerDerateDueTemperature = h.PowerDerateDueTemp.String;              
-         set.minStateOfCharge = h.MinStateOfCharge.String;            
-         set.initialStateOfCharge = h.InitialStateOfCharge.String;            
-         set.chargingEfficiency = h.ChargingEfficiency.String;             
-         set.dischargingEfficiency = h.DischargingEfficiency.String;             
-         set.powerEnergyRatio = h.PowerEnergyRatio.String;              
-         set.maxOperationalYears = h.MaxOperationalYears.String;               
-         set.invEfficiency = h.InvEfficiency.String;   
+        set.pvStartKw = h.PvStart.String;
+        set.pvStopKw = h.PvStop.String;
+        set.pvStepKw = h.PvStep.String;
+        set.battStartKwh = h.BattStart.String;
+        set.battStopKwh = h.BattStop.String;
+        set.battStepKwh = h.BattStep.String;
+        set.llpAccept = h.LlpAccept.String;
+        set.llpStart = h.LlpStart.String;
+        set.llpStop = h.LlpStop.String;
+        set.llpStep = h.LlpStep.String;          
+        set.budget = h.Budget.String;
+        set.pvCostKw = h.PvCost.String ;          
+        set.battCostKwh = h.BattCost.String;             
+        set.battCostFixed = h.BattCostFix.String;             
+        set.inverterCostKw = h.InverterCost.String;          
+        set.operationMaintenanceCostKw = h.OperationMaintenanceCost.String;           
+        set.installBalanceOfSystemCost = h.InstallBalanceOfSystemCost.String;             
+        set.plantLifetime = h.PlantLifetime.String;               
+        set.interestRate = h.InterestRate.String;            
+        set.balanceOfSystem = h.BalanceOfSystem.String;             
+        set.nominalAmbientTemperatureC = h.NominalAmbientTemp.String;              
+        set.nominalCellTemperatureC = h.NominalCellTemp.String;              
+        set.nominalIrradiation = h.NominalIrradiation.String;             
+        set.powerDerateDueTemperature = h.PowerDerateDueTemp.String;              
+        set.minStateOfCharge = h.MinStateOfCharge.String;            
+        set.initialStateOfCharge = h.InitialStateOfCharge.String;            
+        set.chargingEfficiency = h.ChargingEfficiency.String;             
+        set.dischargingEfficiency = h.DischargingEfficiency.String;             
+        set.powerEnergyRatio = h.PowerEnergyRatio.String;              
+        set.maxOperationalYears = h.MaxOperationalYears.String;               
+        set.invEfficiency = h.InvEfficiency.String;   
        
-       presetsPath = get_presets_path;
-       fullpath = strcat(presetsPath, newPresetName);
-       save(fullpath, 'set')
+        presetsPath = get_presets_path;
+        fullpath = strcat(presetsPath, h.NewPresetName.String);
+        save(fullpath, 'set')
        
-       update_presets_menu
+        update_presets_menu
        
     end
     
+    function deletePresetBtn_Callback(src, eventdata)
+
+       presetNames = h.PresetsMenu.String;
+       preset = presetNames(h.PresetsMenu.Value);
+
+       presetsPath = get_presets_path;
+       fullpath = strcat(presetsPath, preset{1});
+       
+       delete(fullpath)
+       
+       update_presets_menu
+       update_edits
+       
+    end
+
     function presetsMenu_Callback(src, eventdata)
        presetNames = src.String;
        preset = presetNames(src.Value);
@@ -627,6 +617,8 @@ f.Visible = 'on';
        
        update_edits
     end
+    
+%% Help functions
     
     function update_edits
         h.PvStart.String = set.pvStartKw;
@@ -670,9 +662,55 @@ f.Visible = 'on';
             presetList{j} = presetFiles(j).name;
         end
 
+        h.PresetsMenu.Value = 1;
         h.PresetsMenu.String = presetList; 
     end
+    
+    
+    function set = init_default_set_values
+        % DEFAULT values 
+        % Simulation Default Parameters:
+        set.pvStartKw = '100';
+        set.pvStopKw = '200';
+        set.pvStepKw = '10';
+        set.battStartKwh = '1200';
+        set.battStopKwh = '1300';
+        set.battStepKwh = '10';
+        set.llpAccept = '5';
+        set.llpStart = '1';
+        set.llpStop = '80';
+        set.llpStep = '5';
 
+        % Economic Default Parameters
+        set.budget = '1500000';
+        set.pvCostKw = '1000';
+        set.battCostKwh = '140';              
+        set.battCostFixed = '0';             
+        set.inverterCostKw = '500';          
+        set.operationMaintenanceCostKw = '50';
+        set.installBalanceOfSystemCost = '2';%
+        set.plantLifetime = '20';           
+        set.interestRate = '6';%  
+
+        %PV Default Parameters
+        set.balanceOfSystem = '85';  %             
+        set.nominalAmbientTemperatureC = '20';    % Nominal ambient test-temperature of the panels [C]
+        set.nominalCellTemperatureC = '47';        % Nominal Operating Cell Temperature [C]
+        set.nominalIrradiation = '0.8';           % Irradiation at nominal operation [kW / m^2]
+        set.powerDerateDueTemperature = '0.004';  % Derating of panel's power due to temperature [/C]
+
+        % Battery Default Parameters
+        set.minStateOfCharge = '40'; %            
+        set.initialStateOfCharge = '100'; %;             
+        set.chargingEfficiency = '85'; % 
+        set.dischargingEfficiency = '90'; %
+        set.powerEnergyRatio = '0.5'; 
+        set.maxOperationalYears = '5';  
+
+        % Inverter Default Parameters
+        set.invEfficiency = '90';
+
+    end
 end
 
 
