@@ -1,12 +1,22 @@
 function programatically
 
+% This script is structured in the following way
+% 1. Initialization
+% 2. Callbacks
+% 3. Help Functions
+    
+    
+    
+    
+    
 lFigWidth = 500; lFigHeight = 900;
 f = figure('Visible','off','Units','pixels',...
            'Position',[340,80,lFigWidth,lFigHeight],'menubar','none');
 
-    
-set = init_default_set_values;
-
+set = struct;
+presetFiles = '';
+presetList = '';
+       
 % Margin metric
 lMargin = 10;
 lAlignEditText = 22;
@@ -14,13 +24,13 @@ lAlignEditText = 22;
 lNextRow = 45;
 lMultiLineAdjust3 = 10;
 lMultiLineAdjust2 = 5;
-lPanelEdge = 70;
+lPanelEdge = 67;
 lPanelWidth = lFigWidth*0.35;
 % Text metrics
 lTextWidth = 80;
 lTextHeight = 40;
 
-%% Title
+% Title
 lTitleHeight = 30;
 lTitleWidth = 300;
 lTitleStartY = lFigHeight - lMargin- lTitleHeight;
@@ -33,6 +43,9 @@ uicontrol(f,'Style','text','String','Development Support Tool',...
 
 
 %% Presets
+% contructs a uicontrol popup menu which keep track of .mat files in the
+% functions/GUI/presets folder. Can save and delete files with the GUI.
+
 lPresetX = lPanelWidth*2+lMargin*1.7;
 lPresetWidth = lPanelWidth*0.7;
 lPresetTitleHeight = 0.7*lTitleHeight;
@@ -47,12 +60,6 @@ uicontrol(f, 'Style','text','String','Presets:',...
 
 lPresetMenuHeight = 18;
 lPresetsMenuY = lPresetTitleY - lMargin - lPresetMenuHeight;
-
-% Put presets from presets directory into presetList
-presetFiles = '';
-presetList = '';
-update_presets_menu
-
 h.PresetsMenu = uicontrol(f, 'Style','popup',...
                          'String',presetList,...
                          'Units','pixels',...
@@ -60,7 +67,7 @@ h.PresetsMenu = uicontrol(f, 'Style','popup',...
                          lPresetsMenuY, ...
                          lPresetWidth, lPresetMenuHeight],...
                          'Callback', @presetsMenu_Callback);
-
+              
 lNewPresetHeaderY = lPresetsMenuY - lMargin*1.5 - lPresetMenuHeight;
 uicontrol(f, 'Style','text','String','New Preset:',...
              'Units','pixels',...
@@ -91,21 +98,38 @@ h.DeletePresetBtn = uicontrol(f, 'Style', 'pushbutton', 'String' , 'Delete',...
                               lPresetWidth, lPresetMenuHeight],...
                               'Callback', @deletePresetBtn_Callback,...
                               'BackgroundColor',[255 206 206]/255);
+                          
+
+update_presets_menu
   
-%% Simulation Control
+%% Calculation Control
 
 lSimControlTitleHeight = 2*lPresetTitleHeight;
 lSimControlTitleY = lDeletePresetBtnY - lSimControlTitleHeight- lMargin;
-uicontrol(f, 'Style','text','String','Run Simulations:',...
+uicontrol(f, 'Style','text','String','Run Calculations:',...
              'Units','pixels',...
              'HorizontalAlignment','Left',...
              'Fontsize',14,...
              'Position',[lPresetX,lSimControlTitleY,...
              lPresetWidth,lSimControlTitleHeight]);
-          
+
+lRunSapvSimBtnHeight = 40;
+lRunSapvSimBtnY = lSimControlTitleY - lRunSapvSimBtnHeight - 1.5*lMargin;
+h.RunSapvSimBtn = uicontrol(f, 'Style', 'pushbutton', 'String' , 'Run Sapv Simulation',...
+                              'Units', 'pixels',...
+                              'Position', [lPresetX, lRunSapvSimBtnY,...
+                              lPresetWidth, lRunSapvSimBtnHeight],...
+                              'Callback', @runSapvSim_Callback,...
+                              'BackgroundColor',[252 244 200]/255);
         
 %% Panels and parameter Input
-
+% this entire section is an initialization of the panels and their texts
+% and edit fields. 
+% Worth noting: 
+% - The metrics are connected to eachother, so
+% that you dont have to change many metrics if you want to change
+% - all ui controls have handles that are found in the global 'h' struct
+% (RECOMENDED: do not change the structure of the panels and title.)
 % SimPar Panel
 lNumberOfSimPar = 9;
 lSimParPanelHeight = lNextRow*(lNumberOfSimPar)+lPanelEdge;
@@ -462,7 +486,7 @@ h.PvParamPanel = uipanel(f,'Title','PV Parameters',...
 lTextY = lPvParPanelHeight-lPanelEdge;
 lEditY = lTextY + lAlignEditText;
 
-uicontrol(h.PvParamPanel,'Style','text','String','Balance Of System',...
+uicontrol(h.PvParamPanel,'Style','text','String','Balance Of System [%]',...
                     'Units','pixels',...
                     'Position',[lTextX,lTextY,...
                      lTextWidth,lTextHeight],...
@@ -547,10 +571,83 @@ h.InvEfficiency = uicontrol(h.InvParamPanel,'Style','edit','String',...
                      lEditWidth,lEditHeight],...
                     'HorizontalAlignment','Center');            
 
+% InData Panel
+lInDataPanelHeight = lNextRow*2-10;
+lNextRow = 0.65*lNextRow
+lInDataPanelWidth = lFigWidth-lMargin*2;
+lInDataPanelY = lBattPanelStartY - lInDataPanelHeight;
+h.InDataPanel = uipanel(f,'Title','Input Data Files',...
+                  'Units','pixels',...
+                  'Position',[lMargin,lInDataPanelY,...
+                   lInDataPanelWidth , lInDataPanelHeight]);   
+
+lInDataTextWidth = 0.2*lInDataPanelWidth;           
+lEditX = lMargin + lInDataTextWidth;
+lInDataEditWidth = 0.26*lInDataPanelWidth;
+
+%LoadProfileData text and edit
+lLoadProfileDataTextY = lInDataPanelHeight - lPanelEdge+5;
+lLoadProfileDataEditY = lLoadProfileDataTextY + lAlignEditText;
+uicontrol(h.InDataPanel,'Style', 'text', 'String', 'Load Data Filename',...
+                        'Units', 'pixels', ...
+                        'Position', [lMargin, lLoadProfileDataTextY,...
+                                     lInDataTextWidth, lTextHeight],...
+                        'HorizontalAlignment','Left');
+h.LoadProfileData = uicontrol(h.InDataPanel,'Style','edit','String',...
+                    set.LoadProfileData,...
+                    'Units','pixels',...
+                    'Position',[lEditX, lLoadProfileDataEditY,...
+                                lInDataEditWidth,lEditHeight],...
+                    'HorizontalAlignment','Left');
+
+%IrradiationDataText and edit
+lIrradiationDataTextY = lLoadProfileDataTextY - lNextRow;
+lIrradiationDataEditY = lLoadProfileDataEditY - lNextRow;
+uicontrol(h.InDataPanel,'Style', 'text', 'String', 'Temperature Data Filename',...
+                        'Units', 'pixels', ...
+                        'Position', [lMargin, lIrradiationDataTextY + lMultiLineAdjust2,...
+                                     lInDataTextWidth, lTextHeight],...
+                        'HorizontalAlignment', 'Left')
+h.IrradiationData = uicontrol(h.InDataPanel,'Style','edit','String',...
+                    set.IrradiationData,...
+                    'Units','pixels',...
+                    'Position',[lEditX, lIrradiationDataEditY,...
+                                lInDataEditWidth,lEditHeight],...
+                    'HorizontalAlignment','Left');
+
+%Temperature text and edit
+lInDataNextColumnX = 0.5*lInDataPanelWidth;
+lEditX = lInDataNextColumnX + lMargin + lInDataTextWidth;
+uicontrol(h.InDataPanel,'Style', 'text', 'String', 'Temperature Data',...
+                        'Units', 'pixels', ...
+                        'Position', [lInDataNextColumnX, lLoadProfileDataTextY,...
+                                     lInDataTextWidth, lTextHeight],...
+                    'HorizontalAlignment','Left');
+h.TemperatureData = uicontrol(h.InDataPanel,'Style','edit','String',...
+                    set.TemperatureData,...
+                    'Units','pixels',...
+                    'Position',[lEditX,lLoadProfileDataEditY,...
+                                lInDataEditWidth,lEditHeight],...
+                    'HorizontalAlignment','Left');
+
+%DataSetFolderName text and edit
+uicontrol(h.InDataPanel,'Style', 'text', 'String', 'Data Set',...
+                        'Units', 'pixels', ...
+                        'Position', [lInDataNextColumnX, lIrradiationDataTextY,...
+                                     lInDataTextWidth, lTextHeight],...
+                        'HorizontalAlignment', 'Left')
+h.DataSetFolderName = uicontrol(h.InDataPanel,'Style','edit','String',...
+                    set.DataSetFolderName,...
+                    'Units','pixels',...
+                    'Position',[lEditX, lIrradiationDataEditY,...
+                                lInDataEditWidth,lEditHeight],...
+                    'HorizontalAlignment','Left');
+                
 f.Visible = 'on';
 
 %% Callbacks
 
+    % saves the edit fields to a new .mat file
     function savePresetBtn_Callback(src, eventdata)
         set.pvStartKw = h.PvStart.String;
         set.pvStopKw = h.PvStop.String;
@@ -582,14 +679,21 @@ f.Visible = 'on';
         set.dischargingEfficiency = h.DischargingEfficiency.String;             
         set.powerEnergyRatio = h.PowerEnergyRatio.String;              
         set.maxOperationalYears = h.MaxOperationalYears.String;               
-        set.invEfficiency = h.InvEfficiency.String;   
+        set.invEfficiency = h.InvEfficiency.String;
+        set.LoadProfileData = h.LoadProfileData.String;
+        set.IrradiationData = h.IrradiationData.String;
+        set.TemperatureData = h.TemperatureData.String;
+        set.DataSetFolderName = h.DataSetFolderName;
        
         presetsPath = get_presets_path;
         fullpath = strcat(presetsPath, h.NewPresetName.String);
         save(fullpath, 'set')
+        h.PresetsMenu.String{length(h.PresetsMenu.String)+1} =...
+            strcat(h.NewPresetName.String, '.mat');
+        h.PresetsMenu.Value = length(h.PresetsMenu.String);
        
         update_presets_menu
-       
+
     end
     
     function deletePresetBtn_Callback(src, eventdata)
@@ -607,19 +711,31 @@ f.Visible = 'on';
        
     end
 
+    % Calls when selecting in the presetsMenu popup
+    % Preset -> Set
     function presetsMenu_Callback(src, eventdata)
        presetNames = src.String;
+
        preset = presetNames(src.Value);
 
        presetsPath = get_presets_path;
        fullpath = strcat(presetsPath, preset{1});
        set = importdata(fullpath);
-       
        update_edits
+       
+    end
+    
+    function runSapvSim_Callback(src, eventdata)
+        
+        
+        
+        
     end
     
 %% Help functions
     
+    % Set -> Edits
+    % Update the edit fields to match the 'set' variable
     function update_edits
         h.PvStart.String = set.pvStartKw;
         h.PvStop.String = set.pvStopKw;
@@ -651,22 +767,68 @@ f.Visible = 'on';
         h.DischargingEfficiency.String = set.dischargingEfficiency;             
         h.PowerEnergyRatio.String = set.powerEnergyRatio;              
         h.MaxOperationalYears.String = set.maxOperationalYears;               
-        h.InvEfficiency.String = set.invEfficiency;        
+        h.InvEfficiency.String = set.invEfficiency;
+        h.LoadProfileData.String = set.LoadProfileData;
+        h.IrradiationData.String = set.IrradiationData;
+        h.TemperatureData.String = set.TemperatureData;
+        h.DataSetFolderName = set.DataSetFolderName;
     end
     
+    % Directory -> Presets
+    % Looks in directory and makes a list of the filenames, puts the list
+    % into the presets menu popup and sets either the currently displayed
+    % preset or the default preset in the 'set' variable given that the
+    % displayed preset still exist
     function update_presets_menu
+        valueNotSet = true;
         presetFiles = dir('functions/GUI/presets/*.mat');
         presetList = cell(1,length(presetFiles));
-
         for j = 1:length(presetList)
             presetList{j} = presetFiles(j).name;
         end
 
-        h.PresetsMenu.Value = 1;
-        h.PresetsMenu.String = presetList; 
+        % set the value (the displayed string in the menu)
+        % This will trigger if the current displaed preset exists as a file
+        if  isempty(h.PresetsMenu.String) == false
+            currentDisplay = h.PresetsMenu.String(h.PresetsMenu.Value);
+            currentIsInPresetList = strcmp(presetList,currentDisplay);
+            if any(currentIsInPresetList)
+                i = find(currentIsInPresetList);
+                h.PresetsMenu.Value = i;
+                valueNotSet = false;
+            end
+        end
+        
+        defaultIsInPresetList = strcmp(presetList,'default.mat');
+        if any(defaultIsInPresetList) && valueNotSet
+            i = find(defaultIsInPresetList);
+            h.PresetsMenu.Value = i;
+            valueNotSet = false;
+        end
+
+        % default was neither in the list nor in directory, we need to make
+        % a new default file defined inside this script. 
+            % comment: This is not
+            % possible through the GUI but may occur if someone delete the file
+            % manually, can be nice if one has rewritten the default file to
+            % something very incorrect and wish to reset to harcoded
+            % default
+        if valueNotSet
+            set = init_default_set_values;
+            update_edits
+            h.NewPresetName.String = 'default';
+            
+            presetsPath = get_presets_path;
+            fullpath = strcat(presetsPath, h.NewPresetName.String);
+            save(fullpath, 'set')
+        else
+            h.PresetsMenu.String = presetList;
+            presetsMenu_Callback(h.PresetsMenu)
+        end
     end
-    
-    
+        
+    % Initialise set with some default values
+    % Default -> Set
     function set = init_default_set_values
         % DEFAULT values 
         % Simulation Default Parameters:
@@ -709,11 +871,17 @@ f.Visible = 'on';
 
         % Inverter Default Parameters
         set.invEfficiency = '90';
+        
+        % Indata Filenames
+        set.LoadProfileData = 'LoadCurve_normalized_single_3percent_100.mat';
+        set.IrradiationData = 'solar_data_Phuntsholing_baseline.mat';
+        set.TemperatureData = 'surface_temp_phuent_2004_hour.mat';
+        set.DataSetFolderName = 'bhutan';
 
     end
 end
 
-
+% returns the path of the preset folder (where presets are stored)
 function presetsPath = get_presets_path
        filename = mfilename();
        localPath = mfilename('fullpath');
@@ -724,6 +892,54 @@ function presetsPath = get_presets_path
        else
            presetsPath = strcat(localPath, 'presets/');
        end
+end
+
+function [SimParam, EcoParam, PvParam, BattParam, InvParam, SimData] = ...
+         init_parameter_classes(set)
+    SimParam = SimulationParameters(  str2double(set.pvStartKw),...
+                                    str2double(set.pvStopKw),...
+                                    str2double(set.pvStepKw),...
+                                    str2double(set.battStartKwh),...
+                                    str2double(set.battStopKwh),...
+                                    str2double(set.battStepKwh),...
+                                    str2double(set.llpAccept)/100,...
+                                    str2double(set.llpStart)/100,...
+                                    str2double(set.llpStop)/100,...
+                                    str2double(set.llpStep)/100);
+                                
+    EcoParam = EconomicParameters;
+    EcoParam.Budget = str2double(set.budget);
+    EcoParam.PvCost = str2double(set.pvCostKw);        
+    EcoParam.BattCost = str2double(set.battCostKwh);             
+    EcoParam.BattCostFix= str2double(set.battCostFixed);             
+    EcoParam.InverterCost = str2double(set.inverterCostKw);         
+    EcoParam.OperationMaintenanceCost = str2double(set.operationMaintenanceCostKw);
+    EcoParam.InstallBalanceOfSystemCos = str2double(set.installBalanceOfSystemCost)/100;
+    EcoParam.PlantLifetime = str2double(set.plantLifetime);
+    EcoParam.InterestRate = str2double(set.interestRate)/100; 
+
+    PvParam.BalanceOfSystem = str2double(set.balanceOfSystem)/100;            
+    PvParam.NominalAmbientTemp = str2double(set.nominalAmbientTemperatureC);              
+    PvParam.NominalCellTemp = str2double(set.nominalCellTemperatureC);              
+    PvParam.NominalIrradiation = str2double(set.nominalIrradiation);             
+    PvParam.PowerDerateDueTemp = str2double(set.powerDerateDueTemperature); 
+    
+    BattParam = BatteryParameters;
+    BattParam.MinStateOfCharge = str2double(set.minStateOfCharge)/100;            
+    BattParam.InitialStateOfCharge = str2double(set.initialStateOfCharge)/100;            
+    BattParam.ChargingEfficiency = str2double(set.chargingEfficiency)/100;             
+    BattParam.DischargingEfficiency = str2double(set.dischargingEfficiency)/100;             
+    BattParam.PowerEnergyRatio = str2double(set.powerEnergyRatio);              
+    BattParam.MaxOperationalYears = str2double(set.maxOperationalYears);   
+    
+    InvParam.InvEfficiency = (set.invEfficiency)/100; 
+    
+    SimData = SimulationInputData( set.LoadProfileData,...
+                                   set.IrradiationData,...
+                                   set.TemperatureData,...
+                                   set.DataSetFolderName);
+
+   
 end
 
 
