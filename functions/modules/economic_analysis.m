@@ -1,4 +1,4 @@
-function [ ecoOutput ] = economic_analysis( SimParam, BattParam, InvParam, EcoParam, InData, SimOutput)
+function [ ecoOutput ] = economic_analysis( SimParam, BattParam, InvParam, InData, EcoParam, SimOutput)
 %ECONOMICANALYSIS The economic implications for every simulated solution
 %   O(n^2) loops through every solution of the simulation to make an
 %   economic solution space. Changing the SimPar will be sufficient to
