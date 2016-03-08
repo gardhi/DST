@@ -112,6 +112,8 @@ h.DeletePresetBtn = uicontrol(f, 'Style', 'pushbutton', 'String' , 'Delete',...
                               'BackgroundColor',[255 206 206]/255);
                           
 
+                          
+
 update_presets_menu
   
 %% Calculation Control ====================================================
@@ -148,7 +150,7 @@ h.RunSapvSimBtn = uicontrol(f, 'Style', 'pushbutton', 'String' , 'Run Sapv Simul
                           
 % Eco Analysis
 lRunEcoAnalysisBtnY = lRunSapvSimBtnY - lRunSingleBtnHeight - lMargin;
-h.RunEcoAnalysisBtn = uicontrol(f, 'Style', 'pushbutton', 'String' , 'Run Eco Analysis',...
+h.RunEcoAnalysisBtn = uicontrol(f, 'Style', 'pushbutton', 'String' , 'Run Economic Analysis',...
                               'Units', 'pixels',...
                               'Position', [lPresetX, lRunEcoAnalysisBtnY,...
                               lPresetWidth, lRunSingleBtnHeight],...
@@ -710,6 +712,18 @@ h.DataSetFolderName = uicontrol(h.InDataPanel,'Style','edit',...
                                 lInDataEditWidth,lEditHeight],...
                     'HorizontalAlignment','Left');
                 
+% Iteration tracker text:
+lIterationTrackerWidth = 0.4*lFigWidth;
+lIterationTrackerX = lFigWidth - lIterationTrackerWidth - lMargin;
+h.IterationTracker = uicontrol(f,'Style','text',...
+                               'Units','pixels','HorizontalAlignment','Right',...
+                               'FontSize',9,...
+                               'Position', [lIterationTrackerX, lTitleStartY,...
+                                lIterationTrackerWidth, lPresetTitleHeight],...
+                                'FontWeight', 'bold');
+                
+set_iteration_tracker_string
+                
 f.Visible = 'on';
 
 %% Callbacks ==============================================================
@@ -790,6 +804,7 @@ f.Visible = 'on';
        fullpath = strcat(presetsPath, preset{1});
        Set = importdata(fullpath);
        update_edits
+       set_iteration_tracker_string
        
     end
     
@@ -904,6 +919,9 @@ f.Visible = 'on';
         h.IrradiationData.String = Set.IrradiationData;
         h.TemperatureData.String = Set.TemperatureData;
         h.DataSetFolderName.String = Set.DataSetFolderName;
+        
+        
+            
     end
     
     % Directory -> Presets
@@ -1012,6 +1030,16 @@ f.Visible = 'on';
         Set.TemperatureData = 'surface_temp_phuent_2004_hour.mat';
         Set.DataSetFolderName = 'bhutan';
 
+    end
+    
+    function set_iteration_tracker_string
+        nPvSteps = (str2double(Set.pvStopKw)-str2double(Set.pvStartKw)) ...
+                 / str2double(Set.pvStepKw) + 1;
+        nBattSteps = (str2double(Set.battStopKwh)-str2double(Set.battStartKwh)) ...
+                 / str2double(Set.battStepKwh) + 1;
+        h.IterationTracker.String = ['(' num2str(nPvSteps) 'x'...
+            num2str(nBattSteps) ' = ' num2str(nPvSteps*nBattSteps) ...
+            ' simulations)'];
     end
 end
 
