@@ -26,8 +26,11 @@ battNetLoadSupply = discharged...
 % pvNetLoadSupply is the net power supply from the pv to load without
 % accounting for the loss 'on the way' to the load.
 pvNetLoadSupply = zeros(1,SimInputData.nHours);
+% if the needed batt output is less than 0 all the load is covered by pv
 pvNetLoadSupply(SimOutput.neededBattOutputKw(:,iPv)<0) = ...
     SimInputData.load( SimOutput.neededBattOutputKw(:,iPv)<0 );
+% if the needed batt output is more than 0, all the pv power absorbed
+% covers goes to cover the load.
 pvNetLoadSupply(SimOutput.neededBattOutputKw(:,iPv)>0) = ...
     SimOutput.pvPowerAbsorbed( SimOutput.neededBattOutputKw(:,iPv) > 0 );
 

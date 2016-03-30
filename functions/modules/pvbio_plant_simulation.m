@@ -126,8 +126,9 @@ for iPv = 1 : SimParam.nPvSteps
 
             end
 
-           % the generator is on and will stay on untill battery is full or
-           % biomass supply runs out.
+           % the generator is on and will stay on untill battery is full,
+           % biomass supply runs out or there is a new day with sufficient
+           % irradiation
            if biomassGeneratorIsOn ...
            
                if availableBiomassKw > BiomParam.generatorOutputKw
