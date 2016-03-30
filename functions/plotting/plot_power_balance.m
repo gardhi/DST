@@ -43,6 +43,7 @@ figure; hold on
 plot(irradiationUtilized,'Color',[200,200,20]/255)
 plot(SimInputData.load, 'Color', [255,1,1]/255 )
 plot(netLoadSupply, 'Color', [1,1,255]/255)
+stairs(SimOutput.biomassGeneratorOutputKw(:,iPv,jBatt),'Color',[77 182 73]/255)
 
 xlabel('Time [hours]')
 ylabel('Energy [kW]')

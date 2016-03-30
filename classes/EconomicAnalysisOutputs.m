@@ -25,7 +25,7 @@ classdef EconomicAnalysisOutputs
     end
     
     methods
-    function ecoOutput = EconomicAnalysisOutputs(investment_cost,... 
+    function obj = EconomicAnalysisOutputs(investment_cost,... 
             netPresentCost,... 
             levelizedCostOfEnergy,...
             battCostTot,...
@@ -36,19 +36,21 @@ classdef EconomicAnalysisOutputs
             capitalRecoveryFactor,...
             nBattEmployed)
 
-        ecoOutput.investmentCost = investment_cost;          
-        ecoOutput.netPresentCost = netPresentCost;
-        ecoOutput.levelizedCostOfEnergy = levelizedCostOfEnergy;
+        if nargin > 0
+            obj.investmentCost = investment_cost;          
+            obj.netPresentCost = netPresentCost;
+            obj.levelizedCostOfEnergy = levelizedCostOfEnergy;
 
-        ecoOutput.battCostTot = battCostTot;
-        ecoOutput.inverterCostTot = inverterCostTot;
-        ecoOutput.pvCostTot = pvCostTot;
+            obj.battCostTot = battCostTot;
+            obj.inverterCostTot = inverterCostTot;
+            obj.pvCostTot = pvCostTot;
 
-        ecoOutput.installBalanceOfSystemTotCost = installBalanceOfSystemTotCost;
-        ecoOutput.operationsMaintenanceReplacementTotCost ...
-                        = operationsMaintenanceReplacementTotCost ;
-        ecoOutput.capitalRecoveryFactor = capitalRecoveryFactor ;
-        ecoOutput.nBattEmployed = nBattEmployed ;
+            obj.installBalanceOfSystemTotCost = installBalanceOfSystemTotCost;
+            obj.operationsMaintenanceReplacementTotCost ...
+                            = operationsMaintenanceReplacementTotCost ;
+            obj.capitalRecoveryFactor = capitalRecoveryFactor ;
+            obj.nBattEmployed = nBattEmployed ;
+        end
     end
     end
     

@@ -12,6 +12,8 @@ classdef SimulationOutputs
         pvPowerAbsorbedUnused
         stateOfCharge
         sumPartialCyclesUsed
+        peakPvPowerAbsorbedKw
+        biomassGeneratorOutputKw
         % battOutputKw
     end
 
@@ -28,7 +30,9 @@ classdef SimulationOutputs
                             lossOfLoadProbability,...
                             pvPowerAbsorbedUnused,...
                             stateOfCharge,...
-                            sumPartialCyclesUsed)
+                            sumPartialCyclesUsed, ...
+                            peakPvPowerAbsorbedKw, ...
+                            biomassGeneratorOutputKw)
                         
            if nargin > 0
                 obj.pvPowerAbsorbed = pvPowerAbsorbed; 
@@ -40,6 +44,8 @@ classdef SimulationOutputs
                 obj.pvPowerAbsorbedUnused = pvPowerAbsorbedUnused;
                 obj.stateOfCharge = stateOfCharge;
                 obj.sumPartialCyclesUsed = sumPartialCyclesUsed;
+                obj.peakPvPowerAbsorbedKw = peakPvPowerAbsorbedKw;
+                obj.biomassGeneratorOutputKw = biomassGeneratorOutputKw;
            end
         end
 

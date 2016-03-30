@@ -21,14 +21,15 @@ classdef OptimalSolutions
                                    lossOfLoadProbabilities,...
                                    levelizedCostsOfEnergy,...
                                    investmentCosts)
-            
-            obj.pvIndexes = pvIndexes;
-            obj.battIndexes = battIndexes;
-            obj.pvKw = pvKw;
-            obj.battKwh = battKwh;
-            obj.lossOfLoadProbabilities = lossOfLoadProbabilities;
-            obj.levelizedCostsOfEnergy = levelizedCostsOfEnergy;
-            obj.investmentCosts = investmentCosts;
+            if nargin > 0
+                obj.pvIndexes = pvIndexes;
+                obj.battIndexes = battIndexes;
+                obj.pvKw = pvKw;
+                obj.battKwh = battKwh;
+                obj.lossOfLoadProbabilities = lossOfLoadProbabilities;
+                obj.levelizedCostsOfEnergy = levelizedCostsOfEnergy;
+                obj.investmentCosts = investmentCosts;
+            end
         end
     end
     

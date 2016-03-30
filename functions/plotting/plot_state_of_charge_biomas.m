@@ -8,21 +8,18 @@ for i = 1:length(iPv)
     jBattKwh = SimParam.batt_step_to_kwh(jBatt(i));
     
     figure
-    % overproduction
+
+    plot(SimOutput.
+
     plot(SimOutput.pvPowerAbsorbedUnused(:,iPv(i), jBatt(i))...
         ./ jBattKwh + 1,'Color',[142 178 68] / 255)
     hold on
-
-    % loss of load
     plot(- SimOutput.lossOfLoad(:,iPv(i), jBatt(i))...
         ./ jBattKwh + BattParam.minStateOfCharge,'Color',[255 91 60] / 255)
-
-    % state of charge
+    hold on
     plot(SimOutput.stateOfCharge(:,iPv(i), jBatt(i)),...
         'Color',[64 127 255] / 255)
-
     hold off
-
     xlabel('Time over the year [hour]')
     ylabel('Power refered to State of Charge of the battery')
     legend('Overproduction, not utilized', 'Loss of power', 'State of charge')

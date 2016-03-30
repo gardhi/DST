@@ -29,17 +29,19 @@ classdef SimulationParameters
             llpSearchAcceptance,...     % Acceptence error when searching a spesific LLP value
             llpSearchTargets)           % LLP range that one want to find optimal solutions within.)
             
-            obj.pvStartKw = pvStartKw;
-            obj.pvStopKw = pvStopKw;
-            obj.pvStepKw = pvStepKw;
-            obj.battStartKwh = battStartKwh;
-            obj.battStopKwh = battStopKwh;
-            obj.battStepKwh = battStepKwh;
-            obj.llpSearchAcceptance = llpSearchAcceptance;
-            obj.llpSearchTargets = llpSearchTargets;
-            
-            obj.nBattSteps = ((obj.battStopKwh - obj.battStartKwh)/ obj.battStepKwh) + 1;
-            obj.nPvSteps = ((obj.pvStopKw - obj.pvStartKw)/ obj.pvStepKw) + 1;
+            if nargin > 0
+                obj.pvStartKw = pvStartKw;
+                obj.pvStopKw = pvStopKw;
+                obj.pvStepKw = pvStepKw;
+                obj.battStartKwh = battStartKwh;
+                obj.battStopKwh = battStopKwh;
+                obj.battStepKwh = battStepKwh;
+                obj.llpSearchAcceptance = llpSearchAcceptance;
+                obj.llpSearchTargets = llpSearchTargets;
+
+                obj.nBattSteps = ((obj.battStopKwh - obj.battStartKwh)/ obj.battStepKwh) + 1;
+                obj.nPvSteps = ((obj.pvStopKw - obj.pvStartKw)/ obj.pvStepKw) + 1;
+            end
         end
         
         function pvKw = pv_step_to_kw(obj, stepNo)
