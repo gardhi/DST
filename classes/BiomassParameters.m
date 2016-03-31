@@ -7,6 +7,7 @@ classdef BiomassParameters
         nomPeakPvPowerTreshold
         biomassWeeklySupplyKw
         generatorOutputKw
+        startupDelayHours
     end
     
     methods
@@ -14,7 +15,8 @@ classdef BiomassParameters
                             isPreemptive,...
                             nomPeakPvPowerTreshold,...
                             biomassWeeklySupplyKw,...
-                            generatorOutputKw)
+                            generatorOutputKw,...
+                            startupDelayHours)
             if nargin > 0
                 obj.isPreemptive = isPreemptive;
                 obj.nomPeakPvPowerTreshold = nomPeakPvPowerTreshold;

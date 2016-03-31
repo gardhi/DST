@@ -20,7 +20,7 @@ clear variables
 
 % Global metrics ==========================================================
 % Figure
-lFigWidth = 500; lFigHeight = 900;
+lFigWidth = 680; lFigHeight = 900;
 % Margin metric
 lMargin = 10;
 lAlignEditText = 22;
@@ -29,7 +29,7 @@ lNextRow = 45;
 lMultiLineAdjust3 = 10;
 lMultiLineAdjust2 = 5;
 lPanelEdge = 67;
-lPanelWidth = lFigWidth*0.35;
+lPanelWidth = lFigWidth*0.25;
 % Text metrics
 lTextWidth = 80;
 lTextSingleHeight = 40;
@@ -59,8 +59,8 @@ uicontrol(f,'Style','text','String','Development Support Tool',...
 % contructs a uicontrol popup menu which keep track of .mat files in the
 % functions/GUI/presets folder. Can save and delete files with the GUI.
 
-lPresetX = lPanelWidth*2+lMargin*1.7;
-lPresetWidth = lPanelWidth*0.7;
+lPresetX = lPanelWidth*3+lMargin*1.7;
+lPresetWidth = lPanelWidth*0.85;
 lPresetTitleHeight = 0.7*lTitleHeight;
 lPresetTitleY = lTitleStartY - lMargin- lPresetTitleHeight;
 
@@ -70,7 +70,6 @@ uicontrol(f, 'Style','text','String','Presets:',...
              'Fontsize',14,...
              'Position',[lPresetX,lPresetTitleY,...
              lPresetWidth,lPresetTitleHeight]);
-
 lPresetMenuHeight = 18;
 lPresetsMenuY = lPresetTitleY - lMargin - lPresetMenuHeight;
 h.PresetsMenu = uicontrol(f, 'Style','popup',...
@@ -150,7 +149,7 @@ h.CheckBoxBiomass = uicontrol(h.PlantChoiceBtnGroup, 'String', 'Biomass',...
          
 
 % Executing Different Modules
-lRunAllBtnHeight = 40;
+lRunAllBtnHeight = 50;
 lAllModulesBtnY = lPlantChoiceBtnGroupY - lRunAllBtnHeight - 1.5*lMargin;
 h.RunAllModulesBtn = uicontrol(f, 'Style', 'pushbutton', 'String' , 'Run All Modules',...
                               'Units', 'pixels',...
@@ -199,7 +198,7 @@ uicontrol(f, 'Style','text','String','Solution Explorer:',...
              'Position',[lPresetX,lSolutionExplorerTitleY,...
              lPresetWidth,lSimControlTitleHeight]);
 
-lRunSolutionExplorerBtnHeight = 40;
+lRunSolutionExplorerBtnHeight = 60;
 lRunSolutionExplorerBtnY = lSolutionExplorerTitleY ...
                          - lRunSolutionExplorerBtnHeight - 1.5*lMargin;
 
@@ -238,7 +237,7 @@ lEditHeight = 18;
 lEditX = lPanelWidth-lMargin-lEditWidth;
 lEditY = lTextY+lAlignEditText;
 
-% PV
+%% PV
 uicontrol(h.SimParamPanel,'Style','text','String','PV start [kW]',...
                     'Units','pixels',...
                     'Position',[lTextX,lTextY,...
@@ -309,7 +308,7 @@ h.BattStep = uicontrol(h.SimParamPanel,'Style','edit','String',Set.battStepKwh,.
                      lEditWidth,lEditHeight],...
                     'HorizontalAlignment','Center');
 
-% LLP
+%% LLP
 uicontrol(h.SimParamPanel,'Style','text','String','Llp Acceptance [%]',...
                     'Units','pixels',...
                     'Position',[lTextX,lTextY - lNextRow*6,...
@@ -355,7 +354,7 @@ h.LlpStep = uicontrol(h.SimParamPanel,'Style','edit','String',Set.llpStep,...
                     'HorizontalAlignment','Center');
 
 
-% % Battery Parameter Panel
+%% Battery Parameter Panel
 lNumberOfBattPar = 6; 
 lBattParPanelHeight = lNextRow*(lNumberOfBattPar)+20;
 lBattPanelStartY = lSimParPanelY - lBattParPanelHeight;
@@ -442,7 +441,7 @@ h.MaxOperationalYears = uicontrol(h.BattParamPanel,'Style','edit','String',...
                 
 
 
-% % Economic Parameters Panel
+%% Economic Parameters Panel
 lNumberOfEcoPar = 8;
 lEcoParPanelHeight = lNextRow*(lNumberOfEcoPar)+lPanelEdge;
 lEcoParPanelY = lTitleStartY - lMargin- lEcoParPanelHeight;
@@ -567,7 +566,7 @@ h.InterestRate = uicontrol(h.EcoParamPanel,'Style','edit','String',Set.interestR
                 
                 
                 
-% % PV Parameters Panel
+%% PV Parameters Panel
 lNumberOfPvPar = 5;
 lPvParPanelHeight = lNextRow*(lNumberOfPvPar)+ 12;
 lPvPanelStartY = lEcoParPanelY - lPvParPanelHeight;
@@ -641,7 +640,7 @@ h.PowerDerateDueTemp = uicontrol(h.PvParamPanel,'Style','edit','String',...
                     'HorizontalAlignment','Center');
 
 
-% Inverter Parameter Panel
+%% Inverter Parameter Panel
 lInvPanelStartY = lBattPanelStartY;
 lInvParPanelHeight = lPvPanelStartY - lInvPanelStartY;
 h.InvParamPanel = uipanel(f,'Title','Inverter Parameters',...
@@ -664,7 +663,59 @@ h.InvEfficiency = uicontrol(h.InvParamPanel,'Style','edit','String',...
                      lEditWidth,lEditHeight],...
                     'HorizontalAlignment','Center');            
 
-% InData Panel
+
+
+%% Biomas Panel
+lBiomasPanelX = lMargin + lPanelWidth*2;
+lBiomasPanelHeight = 250; %lRunSolutionExplorerBtnY - lBiomasPanelY - lMargin;
+lBiomasPanelY = lTitleStartY - lMargin- lBiomasPanelHeight;
+lTextY = lBiomasPanelHeight - lNextRow - lMargin;
+lEditY = lTextY + lAlignEditText;
+
+
+h.BiomasParamPanel = uipanel(f,'Title','Biomas Parameters', ...
+                     'Units','Pixels','Position', [lBiomasPanelX, lBiomasPanelY, ...
+                     lPanelWidth, lBiomasPanelHeight]);
+
+h.IsPreemptive = uicontrol(h.BiomasParamPanel,'Style','checkbox',...
+                     'Value',str2double(Set.isPreemptive),...
+                     'Position',[lTextX, lTextY + lMargin, 0.9*lPanelWidth, lEditHeight],...
+                     'HorizontalAlignment', 'Center',...
+                     'String','is Preemptive');
+
+h.PowerTresholdText = uicontrol(h.BiomasParamPanel,'Style','text','String', 'Peak PV Power-Treshold', ...
+                     'Position',[lTextX, lTextY - lNextRow + lMultiLineAdjust2,...
+                     lTextWidth, lTextSingleHeight],...
+                     'HorizontalAlignment','Left');
+h.PowerTreshold = uicontrol(h.BiomasParamPanel,'Style','edit','String', Set.nomPeakPvPowerTreshold,...
+                     'Position',[lEditX, lEditY - lNextRow,...
+                     lEditWidth, lEditHeight]);
+                
+h.WeeklyBiomassText = uicontrol(h.BiomasParamPanel,'Style','text','String', 'Weekly Biomass Kw Supply', ...
+                     'Position',[lTextX, lTextY - 2*lNextRow + lMultiLineAdjust3,...
+                     lTextWidth, lTextSingleHeight],...
+                     'HorizontalAlignment','Left');
+h.WeeklyBiomass = uicontrol(h.BiomasParamPanel,'Style','edit','String', Set.biomassWeeklySupplyKw,...
+                     'Position',[lEditX, lEditY - 2*lNextRow , lEditWidth, lEditHeight]);
+                 
+h.GeneratorOutputText = uicontrol(h.BiomasParamPanel,'Style','text','String', 'Generator Output Kw', ...
+                     'Position',[lTextX, lTextY - 3*lNextRow + lMultiLineAdjust2,...
+                     lTextWidth, lTextSingleHeight],...
+                     'HorizontalAlignment','Left');
+h.GeneratorOutput = uicontrol(h.BiomasParamPanel,'Style','edit','String', Set.generatorOutputKw,...
+                     'Position',[lEditX, lEditY - 3*lNextRow, lEditWidth, lEditHeight]);
+                 
+h.StartupDelayText = uicontrol(h.BiomasParamPanel,'Style','text','String', 'Startup Delay at Lost Load [hours]', ...
+                     'Position',[lTextX, lTextY - 4*lNextRow + lMultiLineAdjust3,...
+                     lTextWidth, lTextSingleHeight],...
+                     'HorizontalAlignment','Left');
+h.StartupDelayHours = uicontrol(h.BiomasParamPanel,'Style','edit','String', Set.startupDelayHours,...
+                     'Position',[lEditX, lEditY - 4*lNextRow, lEditWidth, lEditHeight]);
+                 
+                
+                
+                
+%% InData Panel
 lInDataPanelHeight = lNextRow*2-10;
 lNextRow = 0.65*lNextRow;
 lInDataPanelWidth = lFigWidth-lMargin*2;
@@ -737,47 +788,6 @@ h.dataSetFolderName = uicontrol(h.InDataPanel,'Style','edit',...
                     'HorizontalAlignment','Left');
                 
                 
-
-% Biomas Panel
-lTextSingleHeight = 15;
-lBiomasPanelY = lBattPanelStartY;
-lBiomasPanelHeight = lRunSolutionExplorerBtnY - lBiomasPanelY - lMargin;
-lTextY = lBiomasPanelHeight - lNextRow - lMargin;
-lEditY = lTextY - lTextSingleHeight -lMargin*0.25;
-lTextDoubleHeight = 30;
-lDoubleNextRow = 52;
-
-
-h.BiomasParamPanel = uipanel(f,'Title','Biomas Parameters', ...
-                     'Units','Pixels','Position', [lPresetX, lBiomasPanelY, ...
-                     lPresetWidth, lBiomasPanelHeight]);
-
-h.IsPreemptiveText = uicontrol(h.BiomasParamPanel,'Style','text','String', 'Is Preemptive', ...
-                     'Position',[lTextX, lTextY, lTextWidth, lTextSingleHeight],...
-                     'HorizontalAlignment','Left');
-h.IsPreemptive = uicontrol(h.BiomasParamPanel,'Style','checkbox',...
-                     'Value',str2double(Set.isPreemptive),...
-                     'Position',[lTextX, lEditY, lTextWidth, lEditHeight],...
-                     'HorizontalAlignment', 'Center');
-
-h.PowerTresholdText = uicontrol(h.BiomasParamPanel,'Style','text','String', 'Peak PV Power-Treshold', ...
-                     'Position',[lTextX, lTextY - lDoubleNextRow, lTextWidth, lTextDoubleHeight],...
-                     'HorizontalAlignment','Left');
-h.PowerTreshold = uicontrol(h.BiomasParamPanel,'Style','edit','String', Set.nomPeakPvPowerTreshold,...
-                     'Position',[lTextX, lEditY - lDoubleNextRow, lTextWidth, lEditHeight]);
-                
-h.WeeklyBiomassText = uicontrol(h.BiomasParamPanel,'Style','text','String', 'Weekly Biomass Kw Supply', ...
-                     'Position',[lTextX, lTextY - 2*lDoubleNextRow, lTextWidth, lTextDoubleHeight],...
-                     'HorizontalAlignment','Left');
-h.WeeklyBiomass = uicontrol(h.BiomasParamPanel,'Style','edit','String', Set.biomassWeeklySupplyKw,...
-                     'Position',[lTextX, lEditY - 2*lDoubleNextRow, lTextWidth, lEditHeight]);
-                 
-h.GeneratorOutputText = uicontrol(h.BiomasParamPanel,'Style','text','String', 'Generator Output Kw', ...
-                     'Position',[lTextX, lTextY - 3*lDoubleNextRow, lTextWidth, lTextDoubleHeight],...
-                     'HorizontalAlignment','Left');
-h.GeneratorOutput = uicontrol(h.BiomasParamPanel,'Style','edit','String', Set.generatorOutputKw,...
-                     'Position',[lTextX, lEditY - 3*lDoubleNextRow, lTextWidth, lEditHeight]);
-                
 % Iteration tracker text:
 lIterationTrackerWidth = 0.4*lFigWidth;
 lIterationTrackerX = lFigWidth - lIterationTrackerWidth - lMargin;
@@ -837,6 +847,7 @@ f.Visible = 'on';
         Set.PowerTreshold = h.PowerTreshold.String;
         Set.biomassWeeklySupplyKw = h.WeeklyBiomass.String;
         Set.generatorOutputKw = h.GeneratorOutput.String;
+        Set.startupDelayHours = h.StartupDelay.String;
         
         presetsPath = get_presets_path;
         fullpath = strcat(presetsPath, h.NewPresetName.String);
@@ -1018,7 +1029,7 @@ f.Visible = 'on';
         h.PowerTreshold.String = Set.nomPeakPvPowerTreshold;
         h.WeeklyBiomass.String = Set.biomassWeeklySupplyKw;
         h.GeneratorOutput.String = Set.generatorOutputKw;
-        
+        h.StartupDelay.String = Set.startupDelayHours;
         
             
     end
@@ -1136,6 +1147,7 @@ f.Visible = 'on';
         Set.nomPeakPvPowerTreshold = '0.6';
         Set.biomassWeeklySupplyKw = '100';
         Set.generatorOutputKw = '15';
+        Set.startupDelayHours = '0.5';
 
     end
     
@@ -1215,8 +1227,8 @@ function [SimParam, EcoParam, PvParam, BattParam, InvParam, SimData, BiomParam].
     BiomParam = BiomassParameters( str2double(Set.isPreemptive) ,...
                                    str2double(Set.nomPeakPvPowerTreshold) ,...
                                    str2double(Set.biomassWeeklySupplyKw) ,...
-                                   str2double(Set.generatorOutputKw) );
-                               
+                                   str2double(Set.generatorOutputKw),...
+                                   str2double(Set.startupDelayHours) );
 end
 
 
