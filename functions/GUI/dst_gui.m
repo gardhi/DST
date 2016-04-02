@@ -687,7 +687,7 @@ h.PowerTresholdText = uicontrol(h.BiomasParamPanel,'Style','text','String', 'Pea
                      'Position',[lTextX, lTextY - lNextRow + lMultiLineAdjust2,...
                      lTextWidth, lTextSingleHeight],...
                      'HorizontalAlignment','Left');
-h.PowerTreshold = uicontrol(h.BiomasParamPanel,'Style','edit','String', Set.nomPeakPvPowerTreshold,...
+h.PowerTreshold = uicontrol(h.BiomasParamPanel,'Style','edit','String', Set.powerTreshold,...
                      'Position',[lEditX, lEditY - lNextRow,...
                      lEditWidth, lEditHeight]);
                 
@@ -709,7 +709,7 @@ h.StartupDelayText = uicontrol(h.BiomasParamPanel,'Style','text','String', 'Star
                      'Position',[lTextX, lTextY - 4*lNextRow + lMultiLineAdjust3,...
                      lTextWidth, lTextSingleHeight],...
                      'HorizontalAlignment','Left');
-h.StartupDelayHours = uicontrol(h.BiomasParamPanel,'Style','edit','String', Set.startupDelayHours,...
+h.StartupDelay = uicontrol(h.BiomasParamPanel,'Style','edit','String', Set.startupDelayHours,...
                      'Position',[lEditX, lEditY - 4*lNextRow, lEditWidth, lEditHeight]);
                  
                 
@@ -844,7 +844,7 @@ f.Visible = 'on';
         Set.dataSetFolderName = h.dataSetFolderName.String;
         Set.checkBoxBiomass = num2str(h.CheckBoxBiomass.Value);
         Set.isPreemptive = num2str(h.IsPreemptive.Value);
-        Set.PowerTreshold = h.PowerTreshold.String;
+        Set.powerTreshold = h.PowerTreshold.String;
         Set.biomassWeeklySupplyKw = h.WeeklyBiomass.String;
         Set.generatorOutputKw = h.GeneratorOutput.String;
         Set.startupDelayHours = h.StartupDelay.String;
@@ -1026,7 +1026,7 @@ f.Visible = 'on';
         h.dataSetFolderName.String = Set.dataSetFolderName;
         h.CheckBoxBiomass.Value = str2double(Set.checkBoxBiomass);
         h.IsPreemptive.Value = str2double(Set.isPreemptive);
-        h.PowerTreshold.String = Set.nomPeakPvPowerTreshold;
+        h.PowerTreshold.String = Set.powerTreshold;
         h.WeeklyBiomass.String = Set.biomassWeeklySupplyKw;
         h.GeneratorOutput.String = Set.generatorOutputKw;
         h.StartupDelay.String = Set.startupDelayHours;
@@ -1144,7 +1144,7 @@ f.Visible = 'on';
         Set.checkBoxBiomass = '1';
         
         Set.isPreemptive = '1';
-        Set.nomPeakPvPowerTreshold = '0.6';
+        Set.powerTreshold = '0.6';
         Set.biomassWeeklySupplyKw = '100';
         Set.generatorOutputKw = '15';
         Set.startupDelayHours = '0.5';
@@ -1225,7 +1225,7 @@ function [SimParam, EcoParam, PvParam, BattParam, InvParam, SimData, BiomParam].
                                    Set.dataSetFolderName);
 
     BiomParam = BiomassParameters( str2double(Set.isPreemptive) ,...
-                                   str2double(Set.nomPeakPvPowerTreshold) ,...
+                                   str2double(Set.powerTreshold) ,...
                                    str2double(Set.biomassWeeklySupplyKw) ,...
                                    str2double(Set.generatorOutputKw),...
                                    str2double(Set.startupDelayHours) );

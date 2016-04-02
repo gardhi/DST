@@ -22,6 +22,7 @@ classdef BiomassParameters
                 obj.nomPeakPvPowerTreshold = nomPeakPvPowerTreshold;
                 obj.biomassWeeklySupplyKw = biomassWeeklySupplyKw;
                 obj.generatorOutputKw = generatorOutputKw;
+                obj.startupDelayHours = startupDelayHours;
             end
         end
     end
