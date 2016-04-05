@@ -1,21 +1,9 @@
-function [ simOutput ] = pvbio_plant_simulation( SimParam, PvParam, BattParam, InvParam, SimData, BiomParam)
+function [ simOutput ] = pvbiomass_plant_simulation( SimParam, PvParam, BattParam, InvParam, SimData, BiomParam)
 %SAPVPLANTSIMULATION Simulates the Battery and PV dynamics based on load
 %and pv simulation input. SAPV stands for stand-alone PV
 %   for each pair of battery size and pv size, the simulation runs the
 %   entire span of hours in the inputData struct. These are assumeed
 %   synchronized (they represent the data at same times, no time offset).
-
-% SPESIFICATION:
-% the plant has two operation modes, preemptive or nonpreemptive, if
-% preemptive we assume that a low irradiation will be discovered on a
-% weather forecast and that the generator will help the PV during the day.
-% 1. The biomass generator turns on
-% - at the beginning of the day if there is a low irradiation weather forecast
-% - at a loss of load + startup delay.
-% 2. The biomass generator turns off
-% - the first hour when the loss of load is too large for the generator
-% - imideimideately if the battery is fully charged
-% - if there is insufficient biomass/fuel available to run the generator.
 
 
 
@@ -57,9 +45,13 @@ for iPv = 1 : SimParam.nPvSteps
                           .* cellEfficiency ...
                           .* PvParam.balanceOfSystem;
                       
-    % Reference for the preemptive biomass generator
-    peakPvPowerAbsorbedKw = max(pvPowerAbsorbedKw);
+    % predicting the weather
+    weatherPredictions = get_weather_predictions(pvPowerAbsorbedKw(:,iPv),...
+                                                BiomParam.nomPeakPvPowerTreshold);
 
+    % no biomass from last simulation should
+    availableBiomassKw = 0;
+                                            
     % The demand from the grid that is not met by the PV output.
     % if negative, the battery can charge
     neededBattOutputKw(:,iPv) = SimData.load ...
@@ -77,13 +69,8 @@ for iPv = 1 : SimParam.nPvSteps
         battMaxPowerFlow = BattParam.powerEnergyRatio...
                            * jBattKwh;     
                        
-        % Initialize biomass generator.
-        % The generator is initially off.
-        biomassGeneratorIsOn = false;
-        % The available biomass is initially zero, filled at t=0.
-        availableBiomassKw = 0;
-        % the delay timer must start at default
-        currentBiomassGeneratorDelay = BiomParam.startupDelayHours;
+        % biomass system state machine initialization
+        biomassSystemState = 'IDLE';
                                                                                                              
         % iterate through the timesteps of one year
         for t = 1 : SimData.nHours                                    
@@ -111,127 +98,133 @@ for iPv = 1 : SimParam.nPvSteps
                 end
             end
             
-            % BIOMASS GENERATION ==========================================
-            % add to biomass storage whenever a week starts 
+            % BIOMASS SYSTEM GENERATION ===================================
             % (written by Gard Hillestad)
-            if mod(t,168) == 0
-                availableBiomassKw = availableBiomassKw ...
-                                   + BiomParam.biomassWeeklySupplyKw;
+            
+            % delivering biomass
+            if mod(t, BiomParam.biomassDeliveryIntervalDays*24) == 0
+                
+               availableBiomassKw = availableBiomass ...
+                                  + BiomParam.biomassDeliveredKw; 
+                
             end
             
-            if biomassGeneratorIsOn
-                % Contributing with power to the grid.
-                biomassGeneratorOutputKw(t,iPv,jBatt) ...
-                                          = BiomParam.generatorOutputKw;
-
-                neededBattOutputKw(t,iPv) = neededBattOutputKw(t,iPv) ...
-                                          - BiomParam.generatorOutputKw;
-
-                availableBiomassKw = availableBiomassKw ...
-                                   - BiomParam.generatorOutputKw;
-                               
-                % Checking whether the generator should be turned OFF...
-                % if a sunny day is coming up
-                if isPreemptive
+            
+            % tick if it's a new day.
+            if mod(t,24) == 0
+                isNewDay = true;
+                day = t/24;
+            end
+            
+            % IDLE---------------------------------------------------------
+            if strcmp(biomassSystemState, 'IDLE')
+                % checking if system should run preemptively
+                if isNewDay ...
+                && strcmp(weatherPredictions{day},'cloudy') ...
+                && BiomParam.isPreemptive
+            
+                    biomassSystemState = 'RUNNING PREEMPTIVELY';
+                % checking if grid is offline (loss of load)
+                elseif stateOfCharge(t, iPv, jBatt) == BattParam.minStateOfCharge;
+                    biomassSystemState = 'STARTING UP';
+                    startupDelayTimer = t;
+                end
+            
+            % STARTING UP--------------------------------------------------
+            elseif strcmp(biomassSystemState, 'STARTING UP')
+                % checking if system should run preemptively
+                if isNewDay ...
+                && strcmp(weatherPredictions{day},'cloudy') ...
+                && BiomParam.isPreemptive
+            
+                    biomassSystemState = 'RUNNING PREEMPTIVELY';
+                % checking if generator is not needed.
+                elseif neededBattOutputKw(t,iPv,jBatt) < 0
                     
-                    % at the beginning of a day
-                    if mod(t,24) == 0 && t < SimData.nHours - 24
+                    biomassSystemState = 'IDLE';
+                    
+                % checking if countdown is below one hour
+                elseif BiomParam.startupDelayHours...
+                     - (t  - startupDelayTimer) < 1
+                 
+                    % the generator starts
+                    partialGeneratorOutputKw = (1-BiomParam.startupDelayHours)...
+                                             * BiomParam.generatorOutputKw;
+                    % running generator for < 1 hour                  
+                    if availableBiomassKw > partialGeneratorOutputKw
                         
-                        % check the peak of powerAbsorbed the following day
-                        peakPowerNextDay = max(pvPowerAbsorbedKw(t:t+23,iPv));
+                        neededBattOutputKw(t,iPv,jBatt) = neededBattOutputKw(t,iPv,jBatt)...
+                                                        - partialGeneratorOutputKw;
+                        biomassGeneratorOutputKw(t,iPv,jBatt) = ...
+                                                        partialGeneratorOutputKw;
+                        availableBiomassKw = availableBiomassKw...
+                                           - partialGeneratorOutputKw;
+                        biomassSystemState = 'RUNNING';
                         
-                        % If it's above a given fraction of the max of the
-                        % whole data set, we assume that this can be
-                        % predicted in a weather forecast as a sunny day,
-                        % and that the generator should be turned off.
-                        if peakPowerNextDay/peakPvPowerAbsorbed(iPv) ...
-                        > BiomParam.nomPeakPvPowerTreshold
-                        
-                            biomassGeneratorIsOn = false;
-                            % resetting delay timer
-                            biomassGeneratorDelayTimer = BiomParam.startupDelayHours;
-                            
-                        end
-                        
+                    else
+                        biomassSystemState = 'INSUFFICIENT BIOMASS';
                     end
                     
-                % if battery is fully charged, insufficient biomass or
-                % insufficient output to bring system back online.
-                elseif stateOfCharge(t,iPv,jBatt) == 1 ...
-                || availableBiomassKw < BiomParam.generatorOutputKw ...
-                || (stateOfCharge(t,iPv,jBatt) == BattParam.minStateOfCharge ...
-                && neededBattOutputKw(t,iPv,jBatt) > 0)
-                    
-                    biomassGeneratorIsOn = false;
-                    % resetting delay timer
-                    biomassGeneratorDelayTimer = BiomParam.startupDelayHours;
-                          
-                
                 end
             
-            % The biomassGenerator is turned OFF
-            else
-                % if the delay timer is running.
-                if biomassGeneratorDelayTimer < BiomParam.startupDelayHours
+            % WAITING TO RETRY---------------------------------------------
+            elseif strcmp(biomassSystemState, 'WAITING TO RETRY')
+                
+            % INSUFFICIENT BIOMASS-----------------------------------------
+            elseif strcmp(biomassSystemState, 'INSUFFICIENT BIOMASS')
+                
+                if availableBiomassKw > BiomParam.generatorOutputKw
                     
-                    
-                else
                     
                     
                 end
+ 
+            end
+            
+            % RUNNING------------------------------------------------------
+            if strcmp(biomassSystemState, 'RUNNING')
+                
+                % checking if generator is not needed.
+                if neededBattOutputKw(t,iPv,jBatt) < 0
+                    
+                    biomassSystemState = 'IDLE';
+                    
+                % checking if there is sufficient biomass/ fuel available
+                elseif availableBiomassKw > BiomParam.generatorOutputKw
+
+                    neededBattOutputKw(t,iPv,jBatt) = neededBattOutputKw(t,iPv,jBatt)...
+                                                    - BiomParam.generatorOutputKw;
+                    biomassGeneratorOutputKw(t,iPv,jBatt) = ...
+                                                    BiomParam.generatorOutputKw;
+                    availableBiomassKw = availableBiomassKw...
+                                       - BiomParam.generatorOutputKw;
+
+                else
+
+                    biomassSystemState = 'INSUFFICIENT BIOMASS';
+
+                end
+                
+                % checking if the system should run preemptively
+                if strcmp(biomassSystemState,'RUNNING')...
+                || strcmp(biomassSystemState,'IDLE')...
+                && isNewDay ...
+                && strcmp(weatherPredictions{day},'cloudy') ...
+                && BiomParam.isPreemptive
+            
+                    biomassSystemState = 'RUNNING PREEMPTIVELY';
+                end
+                
+            end
+                
+               
+            % RUNNING PREEMPTIVELY-----------------------------------------
+            elseif strcmp(biomassSystemState, 'RUNNING PREEMPTIVELY')
+                
                 
                 
             end
-            
-%             % PREEMPTIVE biomass generation check. If the pvPowerPeak this
-%             % day is below a certain treshold, we assume that it can be
-%             % predicted and that the generator wil contribute to charging
-%             % the battery this day.
-%             if BiomParam.isPreemptive
-%                 if mod(t,24) == 0 && t < SimData.nHours - 24
-% 
-%                     peakPowerNextDay = max(pvPowerAbsorbedKw(t:t+23,iPv));
-% 
-%                     if peakPowerNextDay/peakPvPowerAbsorbed(iPv) ...
-%                      < BiomParam.nomPeakPvPowerTreshold
-% 
-%                         biomassGeneratorIsOn = true;
-% 
-%                     else
-% 
-%                         biomassGeneratorIsOn = false;
-%                         % reset the timer
-%                         currentBiomassGeneratorDelay = BiomParam.startupDelayHours;
-% 
-%                     end 
-%                 end
-% 
-%             end
-% 
-%            % the generator is on and will stay on untill battery is full,
-%            % biomass supply runs out or there is a new day with sufficient
-%            % irradiation
-%            if biomassGeneratorIsOn
-%                   
-%               elseif availableBiomassKw > BiomParam.generatorOutputKw
-%  
-%                    biomassGeneratorOutputKw(t,iPv,jBatt) ...
-%                                              = BiomParam.generatorOutputKw;
-% 
-%                    neededBattOutputKw(t,iPv) = neededBattOutputKw(t,iPv) ...
-%                                               - BiomParam.generatorOutputKw;
-% 
-%                    availableBiomassKw = availableBiomassKw ...
-%                                      - BiomParam.generatorOutputKw;
-% 
-%                else
-%                    
-%                    biomassGeneratorIsOn = false;
-%                    
-%                end
-%                    
-%            end
-%             
+            isNewDay = false;
 
             % BATTERY OPERATION ===========================================
             % CHARGING the battery
@@ -352,5 +345,11 @@ simOutput = SimulationOutputs(...
             peakPvPowerAbsorbedKw,...
             biomassGeneratorOutputKw);
 
+
+
 end
+
+
+
+
 

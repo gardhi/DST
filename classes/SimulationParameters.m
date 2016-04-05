@@ -11,6 +11,7 @@ classdef SimulationParameters
         battStartKwh            % Min Battery capacity simulated [kWh]
         battStopKwh             % Max Battery capacity simulated [kWh]
         battStepKwh             % Battery capacity simulation step [kWh]
+        hasBiomassSystem
         llpSearchAcceptance     % Acceptence error when searching a spesific LLP value
         llpSearchTargets        % LLP range that one want to find optimal solutions within.
         nBattSteps
@@ -26,6 +27,7 @@ classdef SimulationParameters
             battStartKwh,...            % Min Battery capacity simulated [kWh]
             battStopKwh,...             % Max Battery capacity simulated [kWh]
             battStepKwh,...             % Battery capacity simulation step [kWh]
+            hasBiomassSystem,...        
             llpSearchAcceptance,...     % Acceptence error when searching a spesific LLP value
             llpSearchTargets)           % LLP range that one want to find optimal solutions within.)
             
@@ -36,6 +38,7 @@ classdef SimulationParameters
                 obj.battStartKwh = battStartKwh;
                 obj.battStopKwh = battStopKwh;
                 obj.battStepKwh = battStepKwh;
+                obj.hasBiomassSystem = hasBiomassSystem;
                 obj.llpSearchAcceptance = llpSearchAcceptance;
                 obj.llpSearchTargets = llpSearchTargets;
 

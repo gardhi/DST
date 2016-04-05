@@ -5,24 +5,30 @@ classdef BiomassParameters
     properties
         isPreemptive
         nomPeakPvPowerTreshold
-        biomassWeeklySupplyKw
+        biomassDeliveredKw
+        biomassDeliveryIntervalDays
         generatorOutputKw
         startupDelayHours
+        retryDelayHours
     end
     
     methods
         function obj = BiomassParameters(...
                             isPreemptive,...
                             nomPeakPvPowerTreshold,...
-                            biomassWeeklySupplyKw,...
+                            biomassDeliveredKw,...
+                            biomassDeliveryIntervalDays,...
                             generatorOutputKw,...
-                            startupDelayHours)
+                            startupDelayHours,...
+                            retryDelayHours)
             if nargin > 0
                 obj.isPreemptive = isPreemptive;
                 obj.nomPeakPvPowerTreshold = nomPeakPvPowerTreshold;
-                obj.biomassWeeklySupplyKw = biomassWeeklySupplyKw;
+                obj.biomassDeliveredKw = biomassDeliveredKw;
+                obj.biomassDeliveryIntervalDays = biomassDeliveryIntervalDays; 
                 obj.generatorOutputKw = generatorOutputKw;
                 obj.startupDelayHours = startupDelayHours;
+                obj.retryDelayHours = retryDelayHours;
             end
         end
     end
