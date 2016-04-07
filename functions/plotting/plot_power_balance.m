@@ -9,10 +9,10 @@ function plot_power_balance( SimParam, BattParam,InvParam, SimInputData, SimOutp
 % Calculations
 % -------------------------------------------------------------------------
 
-
+% 
 % irradiationUtilized is the irradiation that serves load or battery
 irradiationUtilized = SimOutput.pvPowerAbsorbed(:,iPv) ...
-                    - SimOutput.pvPowerAbsorbedUnused(:,iPv,jBatt);
+                    - SimOutput.inputPowerUnusedKw(:,iPv,jBatt);
 
 % discharged is the amount of discharged power from the battery
 discharged = subplus(SimOutput.battOutputKw(:,iPv,jBatt))';
@@ -46,7 +46,7 @@ figure; hold on
 plot(irradiationUtilized,'Color',[200,200,20]/255)
 plot(SimInputData.load, 'Color', [255,1,1]/255 )
 plot(netLoadSupply, 'Color', [1,1,255]/255)
-stairs(SimOutput.biomassGeneratorOutputKw(:,iPv,jBatt),'Color',[77 182 73]/255)
+
 
 xlabel('Time [hours]')
 ylabel('Energy [kW]')

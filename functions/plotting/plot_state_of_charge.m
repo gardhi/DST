@@ -9,7 +9,7 @@ for i = 1:length(iPv)
     
     figure
     % overproduction
-    plot(SimOutput.pvPowerAbsorbedUnused(:,iPv(i), jBatt(i))...
+    plot(SimOutput.inputPowerUnusedKw(:,iPv(i), jBatt(i))...
         ./ jBattKwh + 1,'Color',[142 178 68] / 255)
     hold on
 

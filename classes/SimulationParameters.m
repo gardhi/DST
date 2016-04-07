@@ -14,6 +14,8 @@ classdef SimulationParameters
         hasBiomassSystem
         llpSearchAcceptance     % Acceptence error when searching a spesific LLP value
         llpSearchTargets        % LLP range that one want to find optimal solutions within.
+        npcSearchAcceptance
+        npcSearchTargets
         nBattSteps
         nPvSteps
     end
@@ -29,7 +31,9 @@ classdef SimulationParameters
             battStepKwh,...             % Battery capacity simulation step [kWh]
             hasBiomassSystem,...        
             llpSearchAcceptance,...     % Acceptence error when searching a spesific LLP value
-            llpSearchTargets)           % LLP range that one want to find optimal solutions within.)
+            llpSearchTargets,...
+            npcSearchAcceptance,...
+            npcSearchTargets)           % LLP range that one want to find optimal solutions within.)
             
             if nargin > 0
                 obj.pvStartKw = pvStartKw;
@@ -41,6 +45,8 @@ classdef SimulationParameters
                 obj.hasBiomassSystem = hasBiomassSystem;
                 obj.llpSearchAcceptance = llpSearchAcceptance;
                 obj.llpSearchTargets = llpSearchTargets;
+                obj.npcSearchAcceptance = npcSearchAcceptance;
+                obj.npcSearchTargets = npcSearchTargets;
 
                 obj.nBattSteps = ((obj.battStopKwh - obj.battStartKwh)/ obj.battStepKwh) + 1;
                 obj.nPvSteps = ((obj.pvStopKw - obj.pvStartKw)/ obj.pvStepKw) + 1;

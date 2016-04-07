@@ -7,7 +7,7 @@ for i = 1:length(iPv)
     
     jBattKwh = SimParam.batt_step_to_kwh(jBatt(i));
     
-    averageNominalPowerUnused = get_daily_average(SimOutput.pvPowerAbsorbedUnused(:,iPv(i), jBatt(i))...
+    averageNominalPowerUnused = get_daily_average(SimOutput.inputPowerUnusedKw(:,iPv(i), jBatt(i))...
         ./ jBattKwh) + 1;
     
     

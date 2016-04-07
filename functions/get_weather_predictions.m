@@ -1,14 +1,14 @@
 function weatherPredictions = get_weather_predictions(pvPowerAbsorbedKw,...
                                                       nomPeakPvPowerTreshold)
 
-    weatherPredictions = cell(1,ceil(length(pvPowerAbsorbedKw)/24));
+    weatherPredictions = cell(1,ceil(length(pvPowerAbsorbedKw)/24)+1);
     globalPeakPowerAbsorbedKw = max(pvPowerAbsorbedKw);
     
     for t = 1: length(pvPowerAbsorbedKw)-24
         
-        if mod(t,24)
+        if mod(t,24) == 0
             
-            day = t/24;
+            day = t/24 + 1;
             thisPeakPowerAbsorbedKw = max(pvPowerAbsorbedKw(t:t+24));
             
             % check weather the coming day has a relatively low power
