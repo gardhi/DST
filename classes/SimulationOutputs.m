@@ -13,6 +13,7 @@ classdef SimulationOutputs
         stateOfCharge
         sumPartialCyclesUsed
         biomassGeneratorOutputKw
+        BiomassOccurrences
         % battOutputKw
     end
 
@@ -30,7 +31,8 @@ classdef SimulationOutputs
                             inputPowerUnusedKw,...
                             stateOfCharge,...
                             sumPartialCyclesUsed, ...
-                            biomassGeneratorOutputKw)
+                            biomassGeneratorOutputKw,...
+                            BiomassOccurrences)
                         
            if nargin > 0
                 obj.pvPowerAbsorbed = pvPowerAbsorbed; 
@@ -43,6 +45,7 @@ classdef SimulationOutputs
                 obj.stateOfCharge = stateOfCharge;
                 obj.sumPartialCyclesUsed = sumPartialCyclesUsed;
                 obj.biomassGeneratorOutputKw = biomassGeneratorOutputKw;
+                obj.BiomassOccurrences = BiomassOccurrences;
            end
         end
 

@@ -21,7 +21,9 @@ classdef EconomicAnalysisOutputs
         installBalanceOfSystemTotCost           
         operationsMaintenanceReplacementTotCost 
         capitalRecoveryFactor % see wikipedia
-        nBattEmployed    
+        nBattEmployed
+        biomassSystemNetPresentCost
+        biomassPresentCost
     end
     
     methods
@@ -34,7 +36,9 @@ classdef EconomicAnalysisOutputs
             installBalanceOfSystemTotCost,...
             operationsMaintenanceReplacementTotCost,...     
             capitalRecoveryFactor,...
-            nBattEmployed)
+            nBattEmployed,...
+            biomassSystemNetPresentCost,...
+            biomassPresentCost)
 
         if nargin > 0
             obj.investmentCost = investment_cost;          
@@ -50,6 +54,8 @@ classdef EconomicAnalysisOutputs
                             = operationsMaintenanceReplacementTotCost ;
             obj.capitalRecoveryFactor = capitalRecoveryFactor ;
             obj.nBattEmployed = nBattEmployed ;
+            obj.biomassPresentCost = biomassPresentCost;
+            obj.biomassSystemNetPresentCost = biomassSystemNetPresentCost;
         end
     end
     end

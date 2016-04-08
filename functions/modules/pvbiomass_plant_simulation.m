@@ -8,15 +8,30 @@ function [ simOutput ] = pvbiomass_plant_simulation( SimParam, PvParam, BattPara
 
 
 % Declaration of simulation variables
-[inputPowerUnused, lossOfLoad, stateOfCharge,...
- battOutputKw, biomassGeneratorOutputKw, neededBattOutputKw]...
+[inputPowerUnused,...
+lossOfLoad, stateOfCharge,...
+battOutputKw,...
+biomassGeneratorOutputKw,...
+neededBattOutputKw]...
 = deal(zeros(SimData.nHours, SimParam.nPvSteps, SimParam.nBattSteps));
 
-[sumPartialCyclesUsed, lossOfLoadTot, lossOfLoadProbability]...
+[sumPartialCyclesUsed,...
+lossOfLoadTot,...
+lossOfLoadProbability]...
  = deal(zeros( SimParam.nPvSteps, SimParam.nBattSteps)); 
 
 [pvPowerAbsorbedKw] ...
  = deal(zeros(SimData.nHours,SimParam.nPvSteps));
+
+% the occurrence counter of the biomass system
+[BiomOccurrences.running,...
+BiomOccurrences.runningPreemptively,...
+BiomOccurrences.startupTime,...
+BiomOccurrences.waitingToRetry,...
+BiomOccurrences.waitingToRetryTime,...
+BiomOccurrences.waitingForBiomass,...
+BiomOccurrences.waitingForBiomassTime] ...
+= deal(zeros(SimParam.nPvSteps, SimParam.nBattSteps));
 
 % Cell temperature as function of ambient temperature [C]
 PvTemperature = SimData.temperature...
@@ -125,6 +140,8 @@ for iPv = 1 : SimParam.nPvSteps
                 && BiomParam.isPreemptive
             
                     biomassSystemState = 'RUNNING PREEMPTIVELY';
+                    BiomOccurrences.runningPreemptively(iPv,jBatt)...
+                       = BiomOccurrences.runningPreemptively(iPv,jBatt) + 1;
                     
                 % checking if grid is offline (loss of load)
                 elseif stateOfCharge(t, iPv, jBatt) == BattParam.minStateOfCharge...
@@ -136,6 +153,9 @@ for iPv = 1 : SimParam.nPvSteps
             
             % STARTING UP--------------------------------------------------
             elseif strcmp(biomassSystemState, 'STARTING UP')
+                BiomOccurrences.startupTime(iPv,jBatt)...
+                              = BiomOccurrences.startupTime(iPv,jBatt) + 1;
+                
                 % checking if system should run preemptively
                 residualTime = BiomParam.startupDelayHours...
                              - (t - startupDelayTimer);
@@ -144,20 +164,26 @@ for iPv = 1 : SimParam.nPvSteps
                 && BiomParam.isPreemptive
             
                     biomassSystemState = 'RUNNING PREEMPTIVELY';
+                    BiomOccurrences.runningPreemptively(iPv,jBatt)...
+                       = BiomOccurrences.runningPreemptively(iPv,jBatt) + 1;
                 % checking if generator is not needed.
                 elseif neededBattOutputKw(t,iPv, jBatt) < 0
                     
                     biomassSystemState = 'IDLE';
-                    
-                % checking if countdown is over, or less than one hour
-                elseif residualTime < 1
                  
-                    % the generator starts, residual time accounts for
-                    % either the remaining waiting time of this hour (i.e
-                    % if 0.2 then 1-0.2 = 0.8, the generator should run for
-                    % 0.8 of this hour. Or if -0.2, meaning that the delay 
-                    % is 0.8 and that it should have started 0.2
-                    % hours ago 1 -- 0.2 = 1.2 and should also run this hour)
+                    
+                % checking if countdown is over, or less than one hour:
+                % the generator starts, residual time accounts for
+                % either the remaining waiting time of this hour (i.e
+                % if 0.2 then 1-0.2 = 0.8, the generator should run for
+                % 0.8 of this hour. Or if -0.2, meaning that the delay 
+                % is 0.8 and that it should have started 0.2
+                % hours ago 1 -- 0.2 = 1.2 and should also run this hour)
+                elseif residualTime < 1
+                    BiomOccurrences.startupTime(iPv,jBatt)...
+                                    = BiomOccurrences.startupTime(iPv,jBatt)...
+                                    - residualTime;
+
                     partialGeneratorOutputKw = (1-residualTime)...
                                              * BiomParam.generatorOutputKw;
 
@@ -171,6 +197,8 @@ for iPv = 1 : SimParam.nPvSteps
                         availableBiomassKw = availableBiomassKw...
                                            - partialGeneratorOutputKw;
                         biomassSystemState = 'RUNNING';
+                        BiomOccurrences.running(iPv,jBatt) ...
+                                 = BiomOccurrences.running(iPv,jBatt) + 1;
                         
                     else
                         biomassSystemState = 'INSUFFICIENT BIOMASS';
@@ -183,7 +211,9 @@ for iPv = 1 : SimParam.nPvSteps
             % the biomass system will run 1 hour before shutting off and
             % starting the wait to retry state
             elseif strcmp(biomassSystemState, 'WAITING TO RETRY')
-                
+                BiomOccurrences.waitingToRetryTime(iPv,jBatt)...
+                        = BiomOccurrences.waitingToRetryTime(iPv,jBatt) + 1;
+                                                    
                 residualTime = BiomParam.retryDelayHours ...
                              - (t - waitToRetryTimer);
                          
@@ -194,6 +224,9 @@ for iPv = 1 : SimParam.nPvSteps
                     if strcmp(weatherPredictions{day},'cloudy')
                         
                         previousState = 'RUNNING PREEMPTIVELY';
+                        BiomOccurrences.runningPreemptively(iPv,jBatt)...
+                            = BiomOccurrences.runningPreemptively(iPv,jBatt)...
+                            + 1;
                         
                     elseif strcmp(previousState, 'RUNNING PREEMPTIVELY')
                         
@@ -202,14 +235,17 @@ for iPv = 1 : SimParam.nPvSteps
                     end
                 end
                 
+                % the generator starts, residual time accounts for
+                % either the remaining waiting time of this hour (i.e
+                % if 0.2 then 1-0.2 = 0.8, the generator should run for
+                % 0.8 of this hour. Or if -0.2, meaning that the delay 
+                % is 0.8 and that it should have started 0.2
+                % hours ago 1 -- 0.2 = 1.2 and should also run this hour)
                 if residualTime < 1
-                 
-                    % the generator starts, residual time accounts for
-                    % either the remaining waiting time of this hour (i.e
-                    % if 0.2 then 1-0.2 = 0.8, the generator should run for
-                    % 0.8 of this hour. Or if -0.2, meaning that the delay 
-                    % is 0.8 and that it should have started 0.2
-                    % hours ago 1 -- 0.2 = 1.2 and should also run this hour)
+                    BiomOccurrences.waitingToRetryTime(iPv,jBatt)...
+                            = BiomOccurrences.waitingToRetryTime(iPv,jBatt)...
+                            - residualTime;
+
                     partialGeneratorOutputKw = (1-residualTime)...
                                              * BiomParam.generatorOutputKw;
 
@@ -239,6 +275,9 @@ for iPv = 1 : SimParam.nPvSteps
             % assuming that the delivery will not be made at midnight.
             % Preemptiveness may currently only occur from the next day.
             elseif strcmp(biomassSystemState, 'INSUFFICIENT BIOMASS')
+                BiomOccurrences.waitingForBiomassTime(iPv,jBatt) ...
+                        = BiomOccurrences.waitingForBiomassTime(iPv,jBatt)...
+                        + 1;
                 
                 if availableBiomassKw > BiomParam.generatorOutputKw
                     
@@ -256,6 +295,8 @@ for iPv = 1 : SimParam.nPvSteps
                 && BiomParam.isPreemptive
             
                     biomassSystemState = 'RUNNING PREEMPTIVELY';
+                    BiomOccurrences.runningPreemptively(iPv,jBatt)...
+                      = BiomOccurrences.runningPreemptively(iPv,jBatt) + 1;
                     
                 % checking if generator is not needed.
                 elseif neededBattOutputKw(t,iPv, jBatt) < 0
@@ -282,12 +323,16 @@ for iPv = 1 : SimParam.nPvSteps
                         biomassSystemState = 'WAITING TO RETRY';
                         waitToRetryTimer = t;
                         previousState = 'RUNNING';
+                        BiomOccurrences.waitingToRetry(iPv,jBatt)...
+                           = BiomOccurrences.waitingToRetry(iPv,jBatt) + 1;
                         
                     end
                     
                 else
 
                     biomassSystemState = 'INSUFFICIENT BIOMASS';
+                    BiomOccurrences.waitingForBiomass(iPv,jBatt)...
+                        = BiomOccurrences.waitingForBiomass(iPv,jBatt) + 1;
                 end
                 
             end
@@ -326,12 +371,15 @@ for iPv = 1 : SimParam.nPvSteps
                         biomassSystemState = 'WAITING TO RETRY';
                         waitToRetryTimer = t;
                         previousState = 'RUNNING PREEMPTIVELY';
-                        
+                        BiomOccurrences.waitingToRetry(iPv,jBatt)...
+                           = BiomOccurrences.waitingToRetry(iPv,jBatt) + 1;
                     end
                     
                 else
 
                     biomassSystemState = 'INSUFFICIENT BIOMASS';
+                    BiomOccurrences.waitingForBiomass(iPv,jBatt)...
+                        = BiomOccurrences.waitingForBiomass(iPv,jBatt) + 1;
                 end
                 
             end
@@ -452,7 +500,8 @@ simOutput = SimulationOutputs(...
             inputPowerUnused,...
             stateOfCharge,...
             sumPartialCyclesUsed,...
-            biomassGeneratorOutputKw);
+            biomassGeneratorOutputKw,...
+            BiomOccurrences);
 
 
 
