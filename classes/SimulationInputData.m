@@ -7,7 +7,7 @@ classdef SimulationInputData
     properties
         load
         irradiation
-        temperature
+        temperatureC
         
         nHours
         nYears
@@ -41,12 +41,12 @@ classdef SimulationInputData
                 obj.irradiation = importdata([obj.databasePath...
                                               obj.irradiationFilename]);
 
-                obj.temperature = importdata([obj.databasePath...
+                obj.temperatureC = importdata([obj.databasePath...
                                               obj.temperatureFilename]);
 
                 if (length(obj.load) == length(obj.irradiation))...
-                && (length(obj.load) == length(obj.temperature))
-                    obj.nHours = length(obj.temperature);
+                && (length(obj.load) == length(obj.temperatureC))
+                    obj.nHours = length(obj.temperatureC);
                 else
                     fprintf(['Warning: the data sets\n\t- irradiation data\n\t-',...
                              'ambience temperature data\n\t- load profile data \n',...

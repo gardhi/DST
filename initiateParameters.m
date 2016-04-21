@@ -22,7 +22,7 @@ EcoPar.battCostFixed = 0;              % fixed cost
 EcoPar.inverterCostKw = 500;           % Inverter cost [/kW] (source: MCM_Energy Lab + prof. Silva exercise, POLIMI)
 EcoPar.operationMaintenanceCostKw = 50;% Operations & Maintenance cost for the overall plant [/kW*year] (source: MCM_Energy Lab)
 EcoPar.installBalanceOfSystemCost = 0.2;% Installation (I) and BoS cost as % of cost of PV+battery+Inv [% of Investment cost] (source: Masters, Renewable and Efficient Electric Power Systems,)
-EcoPar.plantLifetime = 20;            % plant LifeTime [year] 
+EcoPar.plantLifetimeYears = 20;            % plant LifeTime [year] 
 EcoPar.interestRate = 0.06;           % rate of interest defined as (HOMER) = nominal rate - inflation
 % Battery cost defined as:
 %costBatt_tot = costBatt_coef_a * battery_capacity [kWh] + costBatt_coef_b (source: Uganda data)

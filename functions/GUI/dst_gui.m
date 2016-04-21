@@ -649,7 +649,7 @@ uicontrol(h.EcoParamPanel,'Style','text','String','Plant Lifetime [years]',...
                      lTextWidth,lTextSingleHeight],...
                     'HorizontalAlignment', 'Left');               
 h.PlantLifetime = uicontrol(h.EcoParamPanel,'Style','edit',...
-                    'String',Set.plantLifetime,...
+                    'String',Set.plantLifetimeYears,...
                     'Units','pixels',...
                     'Position',[lEditX, lEditY-lNextRow*7,...
                      lEditWidth,lEditHeight],...
@@ -1268,7 +1268,7 @@ f.Visible = 'on';
         Set.inverterCostKw = h.InverterCost.String;          
         Set.operationMaintenanceCostKw = h.OperationMaintenanceCost.String;           
         Set.installBalanceOfSystemCost = h.InstallBalanceOfSystemCost.String;             
-        Set.plantLifetime = h.PlantLifetime.String;               
+        Set.plantLifetimeYears = h.PlantLifetime.String;               
         Set.interestRate = h.InterestRate.String;            
         Set.balanceOfSystem = h.BalanceOfSystem.String;             
         Set.nominalAmbientTemperatureC = h.NominalAmbientTemp.String;              
@@ -1323,7 +1323,7 @@ f.Visible = 'on';
         h.InverterCost.String = Set.inverterCostKw;          
         h.OperationMaintenanceCost.String = Set.operationMaintenanceCostKw;           
         h.InstallBalanceOfSystemCost.String = Set.installBalanceOfSystemCost;             
-        h.PlantLifetime.String = Set.plantLifetime;               
+        h.PlantLifetime.String = Set.plantLifetimeYears;               
         h.InterestRate.String = Set.interestRate;            
         h.BalanceOfSystem.String = Set.balanceOfSystem;             
         h.NominalAmbientTemp.String = Set.nominalAmbientTemperatureC;              
@@ -1467,7 +1467,7 @@ function [SimParam, EcoParam, PvParam, BattParam, InvParam, SimData, BiomParam].
     EcoParam.inverterCostKw = str2double(Set.inverterCostKw);         
     EcoParam.operationMaintenanceCostKw = str2double(Set.operationMaintenanceCostKw);
     EcoParam.installBalanceOfSystemCost = str2double(Set.installBalanceOfSystemCost)/100;
-    EcoParam.plantLifetime = str2double(Set.plantLifetime);
+    EcoParam.plantLifetimeYears = str2double(Set.plantLifetimeYears);
     EcoParam.interestRate = str2double(Set.interestRate)/100;
     EcoParam.bioSystemInvestmentCost = str2double(Set.biomassSystemInvestmentCost);
     EcoParam.bioSystemOperationCost = str2double(Set.biomassSystemOperationCost);

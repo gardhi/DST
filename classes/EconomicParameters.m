@@ -11,7 +11,7 @@ classdef EconomicParameters
         inverterCostKw              % Inverter cost [/kW] (source: MCM_Energy Lab + prof. Silva exercise, POLIMI)
         operationMaintenanceCostKw  % Operations & Maintenance cost for the overall plant [/kW*year] (source: MCM_Energy Lab)
         installBalanceOfSystemCost  % Installation (I) and BoS cost as % of cost of PV+battery+Inv [% of Investment cost] (source: Masters, Renewable and Efficient Electric Power Systems,)
-        plantLifetime               % plant LifeTime [year] 
+        plantLifetimeYears               % plant LifeTime [year] 
         interestRate                % rate of interest defined as (HOMER) = nominal rate - inflation
         biomassCostKw               % the cost of biomass per kilowatt
         bioSystemOperationCost      % the yearly cost of running biomas generation.

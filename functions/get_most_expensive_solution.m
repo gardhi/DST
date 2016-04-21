@@ -5,7 +5,7 @@ function [ pvKw, battKwh ] = get_most_expensive_solution(load, EcoPar, BattPar, 
                                         
 [nBattEmployed, yearsBattOperational] = get_worst_case_batt_use(load,...
                                         BattPar.minStateOfCharge,...
-                                        EcoPar.plantLifetime );
+                                        EcoPar.plantLifetimeYears );
 
 loadPeakKw = max(load);
 %inverter is designed on the peak power value
@@ -13,15 +13,15 @@ inverterCostTot = (loadPeakKw/InvPar.efficiency)...
                 * EcoPar.inverterCostKw;
 
 yearsBattRemaining = yearsBattOperational ...
-               - mod(EcoPar.plantLifetime,  yearsBattOperational);
+               - mod(EcoPar.plantLifetimeYears,  yearsBattOperational);
 
 
-interestFactorLastYear = 1/(1+EcoPar.interestRate)^EcoPar.plantLifetime;
-interestFactorSumHalfTime = 1/(1+EcoPar.interestRate)^(EcoPar.plantLifetime/2);
+interestFactorLastYear = 1/(1+EcoPar.interestRate)^EcoPar.plantLifetimeYears;
+interestFactorSumHalfTime = 1/(1+EcoPar.interestRate)^(EcoPar.plantLifetimeYears/2);
 interestFactorSum = 0;
 interestFactorReplacementYears = 0;
 
-for t = 1:EcoPar.plantLifetime
+for t = 1:EcoPar.plantLifetimeYears
     
     interestFactorSum = interestFactorSum...
                            + 1/(1+EcoPar.interestRate)^t;
