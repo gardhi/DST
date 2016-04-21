@@ -1,4 +1,4 @@
-function [ OptOut ] = lcoe_optimums( SimPar, SimOut, EcoOut )
+function [ OptSol ] = lcoe_optimums( SimPar, SimOut, EcoOut )
 %LCOE_OPTIMUMS Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -9,6 +9,7 @@ function [ OptOut ] = lcoe_optimums( SimPar, SimOut, EcoOut )
     minLcoe = min(min(EcoOut.levelizedCostOfEnergy));
     [iPv, jBatt] = find(EcoOut.levelizedCostOfEnergy == minLcoe);
     
+    boundFound = false;
     
     for i = -1:1
         for j = -1:1
@@ -16,7 +17,7 @@ function [ OptOut ] = lcoe_optimums( SimPar, SimOut, EcoOut )
             if (iPv + i > 0 && iPv + i <= nPv)...
             && (jBatt + i > 0 && jBatt + i <= nBatt)
         
-                OptOut = OptimalSolutions(iPv,jBatt,...
+                OptSol = OptimalSolutions(iPv,jBatt,...
                                           SimPar.pv_step_to_kw(iPv - 1),...
                                           SimPar.batt_step_to_kwh(jBatt - 1),...
                                           SimOut.lossOfLoadProbability(iPv,jBatt),...
@@ -25,14 +26,23 @@ function [ OptOut ] = lcoe_optimums( SimPar, SimOut, EcoOut )
                 
             else
                 
-                warning(['There might be lower LCoE (levelized cost of energy) ' ...
-                         'values if you extend your search, see the sim overview plot!'])
+                boundFound = true;
                 
             end
             
             
         end
     end
-
+    
+    if boundFound
+        
+        warning(['There might be lower LCoE (levelized cost of energy) ' ...
+        'values if you extend your search, see the sim overview plot!'])
+    end
+    
+    if isempty(OptSol.pvIndexes)
+        disp('NO solutions found, expand search perimeter')
+    end
+    
 end
 

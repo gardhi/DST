@@ -1,4 +1,4 @@
-function [ OptOut ] = llp_constrained_optimums( SimPar, SimOut, EcoOut )
+ function [ OptSol ] = llp_constrained_optimums( SimPar, SimOut, EcoOut )
 %LLPOPTIMALSOLUTION For a range of  lossOfLoadProbability, find cheapest solutions
 %   Detailed explanation goes here
 
@@ -38,7 +38,7 @@ iBattOpt = iBattOpt(find(iBattOpt));
 
 
 
-OptOut = OptimalSolutions(iPvOpt,...
+OptSol = OptimalSolutions(iPvOpt,...
                          iBattOpt,...
                          SimPar.pv_step_to_kw(iPvOpt - 1),...
                          SimPar.batt_step_to_kwh(iBattOpt - 1),...
@@ -46,5 +46,9 @@ OptOut = OptimalSolutions(iPvOpt,...
                          diag(EcoOut.levelizedCostOfEnergy(iPvOpt, iBattOpt)),...
                          diag(EcoOut.investmentCost(iPvOpt, iBattOpt)));
 
+
+if isempty(OptSol.pvIndexes)
+    disp('NO solutions found, expand search perimeter')
+end
 end
 
