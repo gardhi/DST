@@ -387,6 +387,7 @@ f.Visible = 'on';
         cla(OutputWindow)
         
         downtime = length(find(SimOut.lossOfLoad(:,iPv,jBatt)));
+        
         %explained in the output general info callback
         downtimeOccurences = length(find(...
                     diff(find(SimOut.lossOfLoad(:,iPv,jBatt))) > 2));
@@ -453,9 +454,13 @@ f.Visible = 'on';
         OutputWindow = get_output_window_textbox;
         cla(OutputWindow)
                  
-        [longestLossOfLoad, longestLossOfLoadTime] = get_longest_loss_of_load;
+        [longestLossOfLoad, longestLossOfLoadTime]...
+         = get_longest_period(SimOut.lossOfLoad(:,iPv,jBatt));
+        
         [LowestIrradiation, LargestLoadProfile, LargestLossOfLoad]...
-                                                = get_worst_case_periods;
+        = get_worst_case_periods(SimData.load,...
+                                 SimData.irradiation,...
+                                 SimOut.lossOfLoad(:, iPv, jBatt));
         
         output = {...
         ['Solution No.' num2str(iOptSol) ', Worst-Cases:'], ...
@@ -585,16 +590,13 @@ f.Visible = 'on';
     end
     
     function normalize_figure
-        h.Title.Units = 'normalized';
-        h.SolutionListHeader.Units = 'normalized';
-        h.SolutionList.Units = 'normalized';
-        h.SolutionInfoHeader.Units = 'normalized';
-        h.SolutionInfoLeft.Units = 'normalized';
-        h.SolutionInfoRight.Units = 'normalized';
-        h.WindowChoiceBtnGroup.Units = 'normalized';
-        h.WindowChoiceLeft.Units = 'normalized';
-        h.WindowChoiceCenter.Units = 'normalized';
-        h.WindowChoiceRight.Units = 'normalized';
+       fields = fieldnames(h);
+       
+       for i=1:numel(fields)
+           
+           h.(fields{i}).Units = 'Normalized';
+           
+       end
     end
     
     
@@ -608,96 +610,8 @@ f.Visible = 'on';
         end
     end
     
-    function OutputWindow = get_output_window_figure
-        if h.WindowChoiceLeft.Value
-            OutputWindow = h.SolutionInfoLeft;
-        elseif  h.WindowChoiceRight.Value
-            OutputWindow = h.SolutionInfoRight;
-        else
-            OutputWindow = figure;
-        end
-    end
     
-    function [longestLossOfLoad, iLongestLossOfLoad]...
-             = get_longest_loss_of_load       
-        dLossOfLoad = diff(find(SimOut.lossOfLoad(:,iPv,jBatt)));
-        longestLossOfLoad = 0;
-        counter = 0;
-        for i = 1:length(dLossOfLoad)
-            counter = counter + 1;
-            if dLossOfLoad(i)> 1
-                if longestLossOfLoad < counter
-                    longestLossOfLoad = counter;
-                    iLongestLossOfLoad = i;
-                end
-                counter = 0;
-            end
-        end
-    end
-    
-    function [LowestIrradiation, LargestLoadProfile, LargestLossOfLoad]...
-                                               = get_worst_case_periods
-          
-            hourLastWeekStart = length(SimData.load) - 24*7;
-            hoursInWeek = 24*7;
-            
-            [LowestIrradiation.Day.value, LowestIrradiation.Week.value]...
-                                                            = deal(inf);
-            [LargestLoadProfile.Day.value, LargestLoadProfile.Week.value,...
-             LargestLossOfLoad.Day.value, LargestLossOfLoad.Week.value]...
-                                                            = deal(0);
-                
-            for i = 1:24:(length(SimData.load)-24)
-                
-                irradiationToday = sum(SimData.irradiation(i:i+23));
-                loadProfileToday = sum(SimData.load(i:i+23));
-                lossOfLoadToday = sum(SimOut.lossOfLoad(i:i+23, iPv, jBatt));
-                
-                if  irradiationToday < LowestIrradiation.Day.value
-                    LowestIrradiation.Day.time = i;
-                    LowestIrradiation.Day.value = irradiationToday;
-                end
-                
-                if loadProfileToday > LargestLoadProfile.Day.value
-                    LargestLoadProfile.Day.time = i;
-                    LargestLoadProfile.Day.value = loadProfileToday;
-                end
-                
-                if lossOfLoadToday > LargestLossOfLoad.Day.value
-                    LargestLossOfLoad.Day.time = i;
-                    LargestLossOfLoad.Day.value = lossOfLoadToday;
-                end
-                
-                if i < hourLastWeekStart
-                    irradiationThisWeek = ...
-                        sum(SimData.irradiation(i:(i + hoursInWeek - 1)));
-                    loadProfileThisWeek =...
-                        sum(SimData.load(i:(i + hoursInWeek - 1)));
-                    lossOfLoadThisWeek =...
-                        sum(SimOut.lossOfLoad(i:(i + hoursInWeek - 1),iPv,jBatt));
-                    
-                    if  irradiationThisWeek < LowestIrradiation.Week.value
-                        LowestIrradiation.Week.time = i;
-                        LowestIrradiation.Week.value = irradiationThisWeek;
-                    end
-                    
-                    if  loadProfileThisWeek > LargestLoadProfile.Week.value
-                        LargestLoadProfile.Week.time = i;
-                        LargestLoadProfile.Week.value = loadProfileThisWeek;
-                    end
-                    
-                    if  lossOfLoadThisWeek > LargestLossOfLoad.Week.value
-                        LargestLossOfLoad.Week.time = i;
-                        LargestLossOfLoad.Week.value = lossOfLoadThisWeek;
-                    end                    
 
-                end
-
-            end
-          
-          
-          
-    end
 
 
     
