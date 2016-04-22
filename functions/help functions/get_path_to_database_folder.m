@@ -9,9 +9,9 @@ path = path(1:end-length(filename));
 % Making sure the slashes are right
 operating_system = getenv('OS');
 if strcmp(operating_system(1:7), 'Windows')
-    path = [path '..\database\' desiredFolder '\'];
+    path = [path '..\..\database\' desiredFolder '\'];
 else
-    path = [path '../database\' desiredFolder '/']; 
+    path = [path '../../database\' desiredFolder '/']; 
 end
 
 
