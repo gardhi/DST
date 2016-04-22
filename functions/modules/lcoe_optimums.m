@@ -37,7 +37,7 @@ function [ OptSol ] = lcoe_optimums( SimPar, SimOut, EcoOut )
     if boundFound
         
         warning(['There might be lower LCoE (levelized cost of energy) ' ...
-        'values if you extend your search, see the sim overview plot!'])
+        'values if you extend your sim parameter range, see the sim overview plot!'])
     end
     
     if isempty(OptSol.pvIndexes)
