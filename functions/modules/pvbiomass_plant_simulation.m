@@ -1,4 +1,4 @@
-function [ simOutput ] = pvbiomass_plant_simulation( SimParam, PvParam, BattParam, InvParam, SimData, BiomParam)
+function [ SimOut ] = pvbiomass_plant_simulation( SimParam, PvParam, BattParam, InvParam, SimData, BiomParam)
 %SAPVPLANTSIMULATION Simulates the Battery and PV dynamics based on load
 %and pv simulation input. SAPV stands for stand-alone PV
 %   for each pair of battery size and pv size, the simulation runs the
@@ -130,8 +130,16 @@ for iPv = 1 : SimParam.nPvSteps
                 % the predicted weather is cloudy
                 if strcmp(weatherPredictions{t/24 + 1}, 'cloudy')
                     
-                    biomassSystemState = 'RUNNING PREEMPTIVELY';
-                
+                    if strcmp(biomassSystemState, 'WAITING TO RETRY')
+                    
+                        previousState = 'RUNNING PREEMPTIVELY';
+                        
+                    else
+                        
+                        biomassSystemState = 'RUNNING PREEMPTIVELY';
+                    
+                    end
+                        
                 % the predicted weather is sunny
                 else
                     
@@ -411,7 +419,7 @@ for iPv = 1 : SimParam.nPvSteps
 end
 
 
-simOutput = SimulationOutputs(...
+SimOut = SimulationOutputs(...
             pvPowerAbsorbedKw,...
             neededBattOutputKw,...
             battOutputKw,...

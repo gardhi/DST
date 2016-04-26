@@ -1,4 +1,4 @@
-function [ simOutput ] = pvbiomass_plant_simulation( SimParam, PvParam, BattParam, InvParam, SimData, BiomParam)
+function [ simOutput ] = bugged_pvbiomass_plant_simulation( SimParam, PvParam, BattParam, InvParam, SimData, BiomParam)
 %SAPVPLANTSIMULATION Simulates the Battery and PV dynamics based on load
 %and pv simulation input. SAPV stands for stand-alone PV
 %   for each pair of battery size and pv size, the simulation runs the
