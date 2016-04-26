@@ -1,7 +1,7 @@
 
 This is a DST (design support tool) for the Buthan project compiled by Gard Hillestad
 based on the functionality that was implemented and developed by Stefano Mandelli
-and furthermore augumented by Håkon Duus
+and augumented by Håkon Duus
 
 Changes from the deprecated version:
 - modularization
@@ -9,7 +9,7 @@ Changes from the deprecated version:
 - encapsulation
 
 
--------------------------------------------------------------------------------
+===========================================================================
 In the 'outdated' folder
 
 %% The deprecated script was a mathemathical model of the simulink-version of the microgrid.
@@ -19,7 +19,7 @@ In the 'outdated' folder
 % This script is a combination of the script SAPV_buthan_01[...] from Stefano Mandelli
 % and 'fullYear_script' from Hakon Duus. 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+-----------------
 %% INTRODUCTION
 % Input Notes
 % - Input time series (Solar, Load) must be already yearlized (i.e. 365x24=8760
@@ -53,4 +53,3 @@ In the 'outdated' folder
 
 % LoadCurve_scaled_3 is the constructed curve from Bhutan
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
