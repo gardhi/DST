@@ -24,7 +24,9 @@ lossOfLoadProbability]...
  = deal(zeros(SimData.nHours,SimParam.nPvSteps));
 
 % the occurrence counter of the biomass system
-[BiomOccurrences.waitingToRetry,...
+[BiomOccurrences.startupTime,...
+BiomOccurrences.runningPreemptively,...
+BiomOccurrences.waitingToRetry,...
 BiomOccurrences.waitingToRetryTime,...
 BiomOccurrences.waitingForBiomass,...
 BiomOccurrences.waitingForBiomassTime] ...
@@ -83,7 +85,7 @@ for iPv = 1 : SimParam.nPvSteps
         % biomass system state machine initialization
         runBiomassGeneratorHours = 0;
         biomassSystemState = 'IDLE';
-        previousState = 'IDLE';
+        previousState = 'RUNNING';
                                                                                                              
         % iterate through the timesteps of one year
         for t = 1 : SimData.nHours                                    
@@ -116,198 +118,223 @@ for iPv = 1 : SimParam.nPvSteps
             
             % delivering biomass
             if mod(t, BiomParam.biomassDeliveryIntervalDays*24) == 0
-                
+
                availableBiomassKw = availableBiomassKw ...
                                   + BiomParam.biomassDeliveredKw; 
-                
+
             end
-            
+
             % A new day starts
             if mod(t,24) == 0 && BiomParam.isPreemptive
-                
-                isNewDay = true;
-                
+
                 % the predicted weather is cloudy
                 if strcmp(weatherPredictions{t/24 + 1}, 'cloudy')
-                    
+
+                    isSunny = false;
+
                     if strcmp(biomassSystemState, 'WAITING TO RETRY')
-                    
+
                         previousState = 'RUNNING PREEMPTIVELY';
-                        
+
                     else
-                        
+
                         biomassSystemState = 'RUNNING PREEMPTIVELY';
-                    
+
                     end
-                        
+
                 % the predicted weather is sunny
                 else
-                    
+
                     isSunny = true; 
-                    
+
                 end
-                
-            else
-                
-                isNewDay = false;
-                
+
+
             end
-            
+
             % STATE MACHINE -----------------------------------------------
             % RUNNING PREEMPTIVELY-----------------------------------------
             if strcmp(biomassSystemState, 'RUNNING PREEMPTIVELY')
+
+                BiomOccurrences.runningPreemptively = ...
+                BiomOccurrences.runningPreemptively + 1;
                 
                 % the system should stop running preemptively because of
                 % sunny weather or full battery
-                if (isNewDay && isSunny)||(stateOfCharge(t,iPv,jBatt) == 1)
-            
+                if isSunny||(stateOfCharge(t,iPv,jBatt) == 1)
+
                     biomassSystemState = 'IDLE';
-                 
+
                 % we stay in preemptive mode
                 else
-                    
+
                     runBiomassGeneratorHours = 1;
-                    
+
                 end
-                
+
             % RUNNING------------------------------------------------------
             elseif strcmp(biomassSystemState, 'RUNNING')
-                
+
                 % PV can handle the supply alone
                 if neededBattOutputKw(t,iPv, jBatt) < 0
-                    
+
                     biomassSystemState = 'IDLE';
-                    
+
                 % we stay in running mode
                 else 
-                    
+
                     runBiomassGeneratorHours = 1;
-                    
+
                 end
-                
+
             % IDLE---------------------------------------------------------
             elseif strcmp(biomassSystemState, 'IDLE')
-                
+
                 % The battery is at minimum and power is insufficient
                 if (stateOfCharge(t, iPv, jBatt) == BattParam.minStateOfCharge)...
                 && (neededBattOutputKw(t,iPv, jBatt) > 0);
-            
+
                     biomassSystemState = 'STARTING UP';
                     startupDelayTimer = t;
-                    
+
                 end
-     
+
             % INSUFFICIENT BIOMASS-----------------------------------------
             elseif strcmp(biomassSystemState, 'INSUFFICIENT BIOMASS')
-                
+
                 % Count hours spent waiting for biomass
-                BiomOccurrences.waitingForBiomassTime(iPv,jBatt) ...
-                        = BiomOccurrences.waitingForBiomassTime(iPv,jBatt)...
-                        + 1;
-                
+                BiomOccurrences.waitingForBiomassTime(iPv,jBatt) =...
+                BiomOccurrences.waitingForBiomassTime(iPv,jBatt) + 1;
+
                 % more biomass is available
                 if availableBiomassKw > BiomParam.generatorOutputKw
-                    
+
                     % prepare for normal operation
                     biomassSystemState = 'IDLE';
-                    
+
                 end
-            
+
 
             end
 
             % STARTING UP--------------------------------------------------
             if strcmp(biomassSystemState, 'STARTING UP')
-                
+
                 % The time left
                 residualTime = BiomParam.startupDelayHours...
                              - (t - startupDelayTimer);
 
                 % The generator is not needed
                 if neededBattOutputKw(t,iPv, jBatt) < 0
-                    
+
                     biomassSystemState = 'IDLE';
-                 
+
                 % The timer is done
                 elseif residualTime <= 1
+
+                    % Account for time spent starting up
+                    BiomOccurrences.startupTime = ...
+                    BiomOccurrences.startupTime + 1;
                     
                     % run the generator 
                     runBiomassGeneratorHours = residualTime;
-                    
+
                     biomassSystemState = 'RUNNING';
                     
+                else
+                    
+                    % Account for time spent starting up
+                    BiomOccurrences.startupTime = ...
+                    BiomOccurrences.startupTime + 1;
+
                 end
-            
+
 
             % WAITING TO RETRY---------------------------------------------
             elseif strcmp(biomassSystemState, 'WAITING TO RETRY')
-               
+
                 % The time left
                 residualTime = BiomParam.retryDelayHours ...
-                             - (t - waitToRetryTimer);
-                         
-                % Account for time spent waiting to retry
-                BiomOccurrences.waitingToRetryTime ...
-                = BiomOccurrences.waitingToRetryTime + residualTime;                         
+                             - (t - waitToRetryTimer);                        
 
                 % The timer is done
                 if residualTime <= 1
                     
-                    % run the generator
-                    runBiomassGeneratorHours = residualTime;
-                    
+                    % Account for time spent waiting to retry
+                    BiomOccurrences.waitingToRetryTime = ...
+                    BiomOccurrences.waitingToRetryTime + residualTime; 
+
+                    % The timer finish this hour
+                    if residualTime >= 0
+
+                        % run the generator
+                        runBiomassGeneratorHours = residualTime;
+
+                    % The timer finished last hour
+                    else
+
+                        runBiomassGeneratorHours = 1;
+
+                    end
+
                     % return to previous state
                     biomassSystemState = previousState;
 
+                else
+                    
+                    % Account for time spent waiting to retry
+                    BiomOccurrences.waitingToRetryTime = ...
+                    BiomOccurrences.waitingToRetryTime + 1; 
+                    
                 end
-            
+
             end
-            
+
             % The biomass generator should run for runBiomassGeneratorHours
             if runBiomassGeneratorHours
-                
-                    generatorOutputKw = 1 - runBiomassGeneratorHours...
+
+                    generatorOutputKw = runBiomassGeneratorHours...
                                       * BiomParam.generatorOutputKw;
 
                     % There is sufficient biomass
                     if availableBiomassKw > generatorOutputKw
-                        
+
                         % The needed output is larger than generator kw size
                         if (neededBattOutputKw(t,iPv, jBatt)...
                            * runBiomassGeneratorHours) > generatorOutputKw
 
                             biomassSystemState = 'WAITING TO RETRY';
-                            
+
                             waitToRetryTimer = t;
-                            
+
                             previousState = biomassSystemState;
-                            
-                            BiomOccurrences.waitingToRetry(iPv,jBatt)...
-                            = BiomOccurrences.waitingToRetry(iPv,jBatt) + 1;
-                        
+
+                            BiomOccurrences.waitingToRetry(iPv,jBatt) = ...
+                            BiomOccurrences.waitingToRetry(iPv,jBatt) + 1;
+
                             % The generator will still run the given time
                             % before the insuficient output is discovered.
                         end
-                        
+
                         neededBattOutputKw(t,iPv, jBatt) ...
                                          = neededBattOutputKw(t,iPv, jBatt)...
                                          - generatorOutputKw;
-                                     
+
                         biomassGeneratorOutputKw(t,iPv,jBatt) ...
                                          = generatorOutputKw;
-                                     
+
                         availableBiomassKw = availableBiomassKw...
                                            - generatorOutputKw;
- 
+
                     else
-                        
+
                         biomassSystemState = 'INSUFFICIENT BIOMASS';
-                        
+
                     end
-            
+
                     % will only run what the state machine outputs.
                     runBiomassGeneratorHours = 0;
-            
+
             end
             
             

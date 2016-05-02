@@ -82,7 +82,16 @@ f.Visible = 'on';
         populate_set
         
         presetsPath = get_presets_path;
-        fullpath = strcat(presetsPath, h.NewPresetName.String);
+        
+        presetName = h.NewPresetName.String;
+        if isempty(h.NewPresetName.String)
+            
+            presetName = 'untitled';
+            h.NewPresetName.String = presetName;
+            
+        end
+        
+        fullpath = strcat(presetsPath, presetName);
         save(fullpath, 'Set')
         h.PresetsMenu.String{length(h.PresetsMenu.String)+1} =...
             strcat(h.NewPresetName.String, '.mat');

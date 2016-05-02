@@ -3,16 +3,16 @@ function [ Set ] = get_set_default_dst_gui()
 %   Detailed explanation goes here
         % DEFAULT values 
         % Simulation Default Parameters:
-        Set.pvStartKw = '100';
-        Set.pvStopKw = '200';
+        Set.pvStartKw = '250';
+        Set.pvStopKw = '350';
         Set.pvStepKw = '10';
-        Set.battStartKwh = '1200';
-        Set.battStopKwh = '1300';
+        Set.battStartKwh = '1350';
+        Set.battStopKwh = '1450';
         Set.battStepKwh = '10';
         Set.llpAccept = '0.5';
         Set.llpStart = '1';
-        Set.llpStop = '80';
-        Set.llpStep = '5';
+        Set.llpStop = '30';
+        Set.llpStep = '1';
         Set.npcAccept = '1000';
         Set.npcStart = '900000';
         Set.npcStop = '1400000';
