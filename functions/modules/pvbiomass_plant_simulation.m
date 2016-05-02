@@ -26,6 +26,7 @@ lossOfLoadProbability]...
 % the occurrence counter of the biomass system
 [BiomOccurrences.startupTime,...
 BiomOccurrences.runningPreemptively,...
+BiomOccurrences.runningPreemptivelyTime,...
 BiomOccurrences.waitingToRetry,...
 BiomOccurrences.waitingToRetryTime,...
 BiomOccurrences.waitingForBiomass,...
@@ -60,9 +61,6 @@ for iPv = 1 : SimParam.nPvSteps
     % predicting the weather
     weatherPredictions = get_weather_predictions(pvPowerAbsorbedKw(:,iPv),...
                                                 BiomParam.nomPeakPvPowerTreshold);
-
-    % remove rest of biomass from previous simulation
-    availableBiomassKw = 0;
                                                  
 
     % iterate over all battery capacities from min_batt to max_batt
@@ -82,10 +80,13 @@ for iPv = 1 : SimParam.nPvSteps
         battMaxPowerFlow = BattParam.powerEnergyRatio...
                            * jBattKwh;     
                        
+        %BIOMASS INITIATION
         % biomass system state machine initialization
         runBiomassGeneratorHours = 0;
         biomassSystemState = 'IDLE';
         previousState = 'RUNNING';
+        % remove rest of biomass from previous simulation
+        availableBiomassKw = BiomParam.biomassDeliveredKw;
                                                                                                              
         % iterate through the timesteps of one year
         for t = 1 : SimData.nHours                                    
@@ -141,6 +142,9 @@ for iPv = 1 : SimParam.nPvSteps
                         biomassSystemState = 'RUNNING PREEMPTIVELY';
 
                     end
+                    
+                    BiomOccurrences.runningPreemptively(iPv, jBatt) = ...
+                    BiomOccurrences.runningPreemptively(iPv, jBatt) + 1;
 
                 % the predicted weather is sunny
                 else
@@ -156,8 +160,8 @@ for iPv = 1 : SimParam.nPvSteps
             % RUNNING PREEMPTIVELY-----------------------------------------
             if strcmp(biomassSystemState, 'RUNNING PREEMPTIVELY')
 
-                BiomOccurrences.runningPreemptively = ...
-                BiomOccurrences.runningPreemptively + 1;
+                BiomOccurrences.runningPreemptivelyTime(iPv, jBatt) = ...
+                BiomOccurrences.runningPreemptivelyTime(iPv, jBatt) + 1;
                 
                 % the system should stop running preemptively because of
                 % sunny weather or full battery
@@ -233,8 +237,8 @@ for iPv = 1 : SimParam.nPvSteps
                 elseif residualTime <= 1
 
                     % Account for time spent starting up
-                    BiomOccurrences.startupTime = ...
-                    BiomOccurrences.startupTime + 1;
+                    BiomOccurrences.startupTime(iPv, jBatt) = ...
+                    BiomOccurrences.startupTime(iPv, jBatt) + 1;
                     
                     % run the generator 
                     runBiomassGeneratorHours = residualTime;
@@ -244,8 +248,8 @@ for iPv = 1 : SimParam.nPvSteps
                 else
                     
                     % Account for time spent starting up
-                    BiomOccurrences.startupTime = ...
-                    BiomOccurrences.startupTime + 1;
+                    BiomOccurrences.startupTime(iPv, jBatt) = ...
+                    BiomOccurrences.startupTime(iPv, jBatt) + 1;
 
                 end
 
@@ -261,8 +265,8 @@ for iPv = 1 : SimParam.nPvSteps
                 if residualTime <= 1
                     
                     % Account for time spent waiting to retry
-                    BiomOccurrences.waitingToRetryTime = ...
-                    BiomOccurrences.waitingToRetryTime + residualTime; 
+                    BiomOccurrences.waitingToRetryTime(iPv, jBatt) = ...
+                    BiomOccurrences.waitingToRetryTime(iPv, jBatt) + residualTime; 
 
                     % The timer finish this hour
                     if residualTime >= 0
@@ -283,8 +287,8 @@ for iPv = 1 : SimParam.nPvSteps
                 else
                     
                     % Account for time spent waiting to retry
-                    BiomOccurrences.waitingToRetryTime = ...
-                    BiomOccurrences.waitingToRetryTime + 1; 
+                    BiomOccurrences.waitingToRetryTime(iPv, jBatt) = ...
+                    BiomOccurrences.waitingToRetryTime(iPv, jBatt) + 1; 
                     
                 end
 
@@ -303,11 +307,10 @@ for iPv = 1 : SimParam.nPvSteps
                         if (neededBattOutputKw(t,iPv, jBatt)...
                            * runBiomassGeneratorHours) > generatorOutputKw
 
+                            previousState = biomassSystemState;
                             biomassSystemState = 'WAITING TO RETRY';
 
                             waitToRetryTimer = t;
-
-                            previousState = biomassSystemState;
 
                             BiomOccurrences.waitingToRetry(iPv,jBatt) = ...
                             BiomOccurrences.waitingToRetry(iPv,jBatt) + 1;
@@ -329,6 +332,8 @@ for iPv = 1 : SimParam.nPvSteps
                     else
 
                         biomassSystemState = 'INSUFFICIENT BIOMASS';
+                        BiomOccurrences.waitingForBiomass(iPv,jBatt) = ...
+                        BiomOccurrences.waitingForBiomass(iPv,jBatt) + 1;
 
                     end
 
