@@ -1,10 +1,12 @@
-function [ output_args ] = simulation_overview( SimOut, EcoOut )
-%SIMULATION_OVERVIEW Summary of this function goes here
-%   Detailed explanation goes here
+function simulation_overview( SimOut, EcoOut )
+%SIMULATION_OVERVIEW Plots the simulation-space of important values
+% for more details refer to online documentation.
 
     dim = size(SimOut.lossOfLoadProbability);
 
-    figure
+    f = figure;
+    f.Visible = 'off';
+    
     subplot(2,2,1)
     surf(SimOut.lossOfLoadProbability)
     view(0,90)
@@ -12,6 +14,7 @@ function [ output_args ] = simulation_overview( SimOut, EcoOut )
     title('loss of load probability')
     xlabel('jBatt')
     ylabel('iPv')
+    LlpBar = colorbar('Position',[0.47 0.6024 0.01 0.3143]);
 
     subplot(2,2,2)
     surf(EcoOut.levelizedCostOfEnergy)
@@ -20,6 +23,7 @@ function [ output_args ] = simulation_overview( SimOut, EcoOut )
     title('levelized cost of energy')
     xlabel('jBatt')
     ylabel('iPv')
+    LcoeBar = colorbar('Position', [0.91 0.6024 0.01 0.3143]);
 
     subplot(2,2,3)
     surf(EcoOut.nBattEmployed)
@@ -28,6 +32,7 @@ function [ output_args ] = simulation_overview( SimOut, EcoOut )
     title('number of batteries employed')
     xlabel('jBatt')
     ylabel('iPv')
+    Nbattbar = colorbar('Position',[0.47 0.1286 0.01 0.3143])
 
     subplot(2,2,4)
     surf(EcoOut.netPresentCost)
@@ -36,6 +41,10 @@ function [ output_args ] = simulation_overview( SimOut, EcoOut )
     title('net present cost')
     xlabel('jBatt')
     ylabel('iPv')
-
+    NpcBar = colorbar('Position',[0.91 0.1286 0.01 0.3143]);
+    
+    
+    f.Visible = 'on';
+    
 end
 

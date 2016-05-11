@@ -1,4 +1,4 @@
-function plot_power_balance_biomass( SimParam, BattParam,InvParam, SimData, SimOut, iPv, jBatt )
+function plot_power_balance_biomass( BattParam,InvParam, SimData, SimOut, iPv, jBatt )
    %PLOT_POWER_BALANCE compare sources of load served
     % The power balance is created to track the sources of power serving
     % the load, and compare it in scale to where the power arrives from.

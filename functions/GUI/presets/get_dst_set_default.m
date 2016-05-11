@@ -30,7 +30,7 @@ function [ Set ] = get_set_default_dst_gui()
         Set.interestRate = '6';% 
         Set.biomassCostKw = '0';
         Set.biomassSystemInvestmentCost = '20000';
-        Set.biomassSystemOperationCost = '100';
+        Set.biomassSystemOperationCostYear = '100';
         
 
         %PV Default Parameters

@@ -6,41 +6,48 @@ SimInBhut = SimIn;
 clear SimIn;
 
 
-SimOutBhut = sapv_plant_simulation(SimPar, PvPar, BattPar, InvPar, SimInBhut);
+SimOut = sapv_plant_simulation(SimPar, PvPar, BattPar, InvPar, SimInBhut);
 
-EcoOutBhut = economic_analysis( SimPar, BattPar, InvPar, EcoPar, SimInBhut, SimOutBhut);
+EcoOut = economic_analysis( SimPar, BattPar, InvPar, EcoPar, SimInBhut, SimOut);
 
 %%
 
-nSolutions = size(EcoOutBhut.operationsMaintenanceReplacementTotCost);
+[nPv, nBatt] = size(EcoOut.operationsMaintenanceReplacementTotCost);
 
-ratiosBhut = zeros(2,nSolutions(1)*nSolutions(2));
+ratios = zeros(2,nPv*nBatt);
 
-for i = 1:nSolutions(1)
-    for j = 1:nSolutions(2)
+for iPv = 1:nPv
+    for jBatt = 1:nBatt
    
-        ratiosBhut(1,(i-1)*nSolutions(2)+j) = EcoOutBhut.operationsMaintenanceReplacementTotCost(i,j)...
-                                          / EcoOutBhut.netPresentCost(i,j);
-        ratiosBhut(2,(i-1)*nSolutions(2)+j) = 1- SimOutBhut.lossOfLoadProbability(i,j);
+        ratios(1,(iPv-1)*nBatt+jBatt) = EcoOut.investmentCost(iPv,jBatt)...
+                                      / EcoOut.netPresentCost(iPv,jBatt);
+        ratios(2,(iPv-1)*nBatt+jBatt) = SimOut.lossOfLoadProbability(iPv,jBatt);
     end
 end
 
-ratiosBhut = sortrows(ratiosBhut',1)';
+ratios = sortrows(ratios',1)';
 
-figure(1); clf(1); hold on;
-plot(ratiosBhut(1,:),ratiosBhut(2,:),'.')
-xlabel('ratios OeMeR/NPC')
-ylabel('1-LLP')
+figure; hold on;
+plot(ratios(1,:),ratios(2,:),'o')
+xlabel('ratio IC/OeMeR')
+ylabel('LLP')
+title('Possiblility for analytic estimate given LLP?')
 hold off
         
 %%
-
-nonZeroM = find( ratiosBhut(1,:) );
 figure; hold on;
-plot(ratiosBhut(1, nonZeroM), ratiosBhut(2, nonZeroM))
+histogram(ratios(1,:),'NumBins',50);
+xlabel('ratio'); ylabel('number of simulations')
+title('Distribution of IC/OeMeR ratios')
 
-[a, b] = polyfit(ratiosBhut(1, nonZeroM), ratiosBhut(2, nonZeroM), 2);
-plot(ratiosBhut(:, nonZeroM),ratiosBhut(:, nonZeroM)*a + b )
+%%
+
+nonZeroM = find( ratios(1,:) );
+figure; hold on;
+plot(ratios(1, nonZeroM), ratios(2, nonZeroM))
+ 
+[a, b] = polyfit(ratios(1, nonZeroM), ratios(2, nonZeroM), 2);
+plot(ratios(:, nonZeroM),ratios(:, nonZeroM)*a + b )
 
 
 

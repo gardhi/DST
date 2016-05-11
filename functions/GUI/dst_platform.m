@@ -1,6 +1,5 @@
-function dst_gui
-clear variables
-% Brief explanation =======================================================
+function dst_platform
+ % Brief explanation =======================================================
 % This script is structured in the following way
 % 1. Initialization
 % 2. Callbacks
@@ -177,6 +176,7 @@ f.Visible = 'on';
         parameters_to_workspace(SimParam,EcoParam,PvParam,...
                                 BattParam,InvParam,SimData, BiomParam)
        
+        disp('--------------------------------------------------')
         
         % run the modules in workspace
         if strcmp(button,'all') || strcmp(button, 'sim')
@@ -304,7 +304,7 @@ f.Visible = 'on';
         Set.retryDelayHours = h.RetryDelay.String;
         Set.biomassCostKw = h.BiomassCost.String;
         Set.biomassSystemInvestmentCost = h.BiomassSystemInvestmentCost.String;
-        Set.biomassSystemOperationCost = h.biomassSystemOperationCost.String; 
+        Set.biomassSystemOperationCostYear = h.biomassSystemOperationCost.String; 
         
     end
 
@@ -359,7 +359,7 @@ f.Visible = 'on';
         h.RetryDelay.String = Set.retryDelayHours;
         h.BiomassCost.String = Set.biomassCostKw;
         h.BiomassSystemInvestmentCost.String = Set.biomassSystemInvestmentCost;
-        h.biomassSystemOperationCost.String = Set.biomassSystemOperationCost;
+        h.biomassSystemOperationCost.String = Set.biomassSystemOperationCostYear;
         
         
             
@@ -1543,7 +1543,7 @@ function [SimParam, EcoParam, PvParam, BattParam, InvParam, SimData, BiomParam].
     EcoParam.plantLifetimeYears = str2double(Set.plantLifetimeYears);
     EcoParam.interestRate = str2double(Set.interestRate)/100;
     EcoParam.bioSystemInvestmentCost = str2double(Set.biomassSystemInvestmentCost);
-    EcoParam.bioSystemOperationCost = str2double(Set.biomassSystemOperationCost);
+    EcoParam.bioSystemOperationCostYear = str2double(Set.biomassSystemOperationCostYear);
     EcoParam.biomassCostKw = str2double(Set.biomassCostKw);
 
     PvParam.balanceOfSystem = str2double(Set.balanceOfSystem)/100;            

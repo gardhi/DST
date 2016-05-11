@@ -7,13 +7,13 @@ for i = 1:length(iPv)
     
     jBattKwh = SimParam.batt_step_to_kwh(jBatt(i));
     
-    averageNominalPowerUnused = get_daily_average(SimOutput.inputPowerUnusedKw(:,iPv(i), jBatt(i))...
+    averageNominalPowerUnused = get_average_day(SimOutput.inputPowerUnusedKw(:,iPv(i), jBatt(i))...
         ./ jBattKwh) + 1;
     
     
-    averageNominalStateOfCharge = get_daily_average(SimOutput.stateOfCharge(:,iPv(i), jBatt(i)));
+    averageNominalStateOfCharge = get_average_day(SimOutput.stateOfCharge(:,iPv(i), jBatt(i)));
     
-    averageNominalLossOfLoad = -get_daily_average(SimOutput.lossOfLoad(:,iPv(i), jBatt(i))...
+    averageNominalLossOfLoad = -get_average_day(SimOutput.lossOfLoad(:,iPv(i), jBatt(i))...
         ./ jBattKwh) + BattParam.minStateOfCharge;
     
 
@@ -24,6 +24,7 @@ for i = 1:length(iPv)
     plot(averageNominalLossOfLoad, 'Color',[255 91 60] / 255)
     hold off
     
+    box on
     axis([0 24 0.2 1.3])
     xlabel('Hour of the day')
     ylabel('Power refered to State of Charge of the battery')

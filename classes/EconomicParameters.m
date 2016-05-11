@@ -14,7 +14,7 @@ classdef EconomicParameters
         plantLifetimeYears               % plant LifeTime [year] 
         interestRate                % rate of interest defined as (HOMER) = nominal rate - inflation
         biomassCostKw               % the cost of biomass per kilowatt
-        bioSystemOperationCost      % the yearly cost of running biomas generation.
+        bioSystemOperationCostYear  % the yearly cost of running biomas generation.
         bioSystemInvestmentCost     % the initial cost of implementing the biomass system.
         
 

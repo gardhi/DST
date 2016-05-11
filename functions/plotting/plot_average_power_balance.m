@@ -35,9 +35,9 @@ pvNetLoadSupply(SimOutput.neededBattOutputKw(:,iPv)>0) = ...
 netLoadSupply = battNetLoadSupply + pvNetLoadSupply;
 
 % averages:
-averageIrradiationUtilized = get_daily_average(irradiationUtilized);
-averageLoad = get_daily_average(SimInputData.load);
-averageNetLoadSupply = get_daily_average(netLoadSupply);
+averageIrradiationUtilized = get_average_day(irradiationUtilized);
+averageLoad = get_average_day(SimInputData.load);
+averageNetLoadSupply = get_average_day(netLoadSupply);
 
 
 % -------------------------------------------------------------------------
