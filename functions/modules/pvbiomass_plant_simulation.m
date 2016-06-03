@@ -180,12 +180,13 @@ for iPv = 1 : SimParam.nPvSteps
             elseif strcmp(biomassSystemState, 'RUNNING')
 
                 % PV can handle the supply alone
-                if neededBattOutputKw(t,iPv, jBatt) < 0
+                if neededBattOutputKw(t,iPv, jBatt) < 0 ...
+                || stateOfCharge(t, iPv, jBatt) == 1   
 
                     biomassSystemState = 'IDLE';
 
                 % we stay in running mode
-                else 
+                else
 
                     runBiomassGeneratorHours = 1;
 

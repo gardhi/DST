@@ -32,7 +32,7 @@ function simulation_overview( SimOut, EcoOut )
     title('number of batteries employed')
     xlabel('jBatt')
     ylabel('iPv')
-    Nbattbar = colorbar('Position',[0.47 0.1286 0.01 0.3143])
+    Nbattbar = colorbar('Position',[0.47 0.1286 0.01 0.3143]);
 
     subplot(2,2,4)
     surf(EcoOut.netPresentCost)
