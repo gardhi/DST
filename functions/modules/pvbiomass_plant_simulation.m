@@ -133,6 +133,7 @@ for iPv = 1 : SimParam.nPvSteps
 
                     isSunny = false;
 
+                    % the system is still waiting to retry
                     if strcmp(biomassSystemState, 'WAITING TO RETRY')
 
                         previousState = 'RUNNING PREEMPTIVELY';
