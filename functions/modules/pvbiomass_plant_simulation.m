@@ -6,7 +6,6 @@ function [ SimOut ] = pvbiomass_plant_simulation( SimParam, PvParam, BattParam, 
 %   synchronized (they represent the data at same times, no time offset).
 
 
-
 % Declaration of simulation variables
 [inputPowerUnused,...
 lossOfLoad, stateOfCharge,...
@@ -90,29 +89,7 @@ for iPv = 1 : SimParam.nPvSteps
                                                                                                              
         % iterate through the timesteps of one year
         for t = 1 : SimData.nHours                                    
-            if t > 8 
-                if neededBattOutputKw(t-1,iPv, jBatt) > 0 ...
-                && neededBattOutputKw(t-2,iPv, jBatt) > 0 ...
-                && neededBattOutputKw(t-3,iPv, jBatt) > 0 ...
-                && neededBattOutputKw(t-4,iPv, jBatt) > 0 ...
-                && neededBattOutputKw(t-5,iPv, jBatt) > 0 ...
-                && neededBattOutputKw(t-6,iPv, jBatt) > 0 ...
-                && neededBattOutputKw(t-7,iPv, jBatt) > 0 ...
-                && neededBattOutputKw(t-8,iPv, jBatt) > 0 ...
-                && neededBattOutputKw(t,iPv, jBatt) < 0
-                % battery has been discharged consistently the previous
-                % 8 hours and is now charging.
-                   
-                   % Depth of Discharge is the opposite of State of Charge
-                   depthOfDischarge = 1 - stateOfCharge(t,iPv,jBatt);            
-                   
-                   nMaxPartialCycles = cycles_to_failure(depthOfDischarge);
-                   
-                   sumPartialCyclesUsed(iPv, jBatt) ...
-                                    = sumPartialCyclesUsed(iPv, jBatt)...
-                                    + 1/(nMaxPartialCycles);
-                end
-            end
+
             
             % BIOMASS SYSTEM GENERATION ===================================
             % (written by Gard Hillestad)
@@ -134,13 +111,13 @@ for iPv = 1 : SimParam.nPvSteps
                     isSunny = false;
 
                     % the system is still waiting to retry
-                    if strcmp(biomassSystemState, 'WAITING TO RETRY')
+                    if strcmp(biomassSystemState, 'WAITING_TO_RETRY')
 
-                        previousState = 'RUNNING PREEMPTIVELY';
+                        previousState = 'RUNNING_PREEMPTIVELY';
 
                     else
 
-                        biomassSystemState = 'RUNNING PREEMPTIVELY';
+                        biomassSystemState = 'RUNNING_PREEMPTIVELY';
 
                     end
                     
@@ -159,7 +136,7 @@ for iPv = 1 : SimParam.nPvSteps
 
             % STATE MACHINE -----------------------------------------------
             % RUNNING PREEMPTIVELY-----------------------------------------
-            if strcmp(biomassSystemState, 'RUNNING PREEMPTIVELY')
+            if strcmp(biomassSystemState, 'RUNNING_PREEMPTIVELY')
 
                 BiomOccurrences.runningPreemptivelyTime(iPv, jBatt) = ...
                 BiomOccurrences.runningPreemptivelyTime(iPv, jBatt) + 1;
@@ -200,13 +177,13 @@ for iPv = 1 : SimParam.nPvSteps
                 if (stateOfCharge(t, iPv, jBatt) == BattParam.minStateOfCharge)...
                 && (neededBattOutputKw(t,iPv, jBatt) > 0);
 
-                    biomassSystemState = 'STARTING UP';
+                    biomassSystemState = 'STARTING_UP';
                     startupDelayTimer = t;
 
                 end
 
             % INSUFFICIENT BIOMASS-----------------------------------------
-            elseif strcmp(biomassSystemState, 'INSUFFICIENT BIOMASS')
+            elseif strcmp(biomassSystemState, 'INSUFFICIENT_BIOMASS')
 
                 % Count hours spent waiting for biomass
                 BiomOccurrences.waitingForBiomassTime(iPv,jBatt) =...
@@ -224,7 +201,7 @@ for iPv = 1 : SimParam.nPvSteps
             end
 
             % STARTING UP--------------------------------------------------
-            if strcmp(biomassSystemState, 'STARTING UP')
+            if strcmp(biomassSystemState, 'STARTING_UP')
 
                 % The time left
                 residualTime = BiomParam.startupDelayHours...
@@ -257,7 +234,7 @@ for iPv = 1 : SimParam.nPvSteps
 
 
             % WAITING TO RETRY---------------------------------------------
-            elseif strcmp(biomassSystemState, 'WAITING TO RETRY')
+            elseif strcmp(biomassSystemState, 'WAITING_TO_RETRY')
 
                 % The time left
                 residualTime = BiomParam.retryDelayHours ...
@@ -306,11 +283,15 @@ for iPv = 1 : SimParam.nPvSteps
                     if availableBiomassKw > generatorOutputKw
 
                         % The needed output is larger than generator kw size
-                        if (neededBattOutputKw(t,iPv, jBatt)...
-                           * runBiomassGeneratorHours) > generatorOutputKw
-
+                        % and the system is not in preemptive run mode and
+                        % with battery capacity remaining
+                        if ((neededBattOutputKw(t,iPv, jBatt)...
+                           * runBiomassGeneratorHours) > generatorOutputKw)...
+                        && ~(strcmp(biomassSystemState, 'RUNNING_PREEMPTIVELY')...
+                        && (stateOfCharge(t,iPv,jBatt) > BattParam.minStateOfCharge))
+                   
                             previousState = biomassSystemState;
-                            biomassSystemState = 'WAITING TO RETRY';
+                            biomassSystemState = 'WAITING_TO_RETRY';
 
                             waitToRetryTimer = t;
 
@@ -335,13 +316,35 @@ for iPv = 1 : SimParam.nPvSteps
 
                     else
 
-                        biomassSystemState = 'INSUFFICIENT BIOMASS';
+                        biomassSystemState = 'INSUFFICIENT_BIOMASS';
 
                     end
 
                     % will only run what the state machine outputs.
                     runBiomassGeneratorHours = 0;
 
+            end
+            
+            
+            
+            if t > 8 
+                if neededBattOutputKw(t-1,iPv, jBatt) > 0 ...
+                && neededBattOutputKw(t-2,iPv, jBatt) > 0 ...
+                && neededBattOutputKw(t-3,iPv, jBatt) > 0 ...
+                && neededBattOutputKw(t-4,iPv, jBatt) > 0 ...
+                && neededBattOutputKw(t,iPv, jBatt) < 0
+                % battery has been discharged consistently the previous
+                % 8 hours and is now charging.
+
+                   % Depth of Discharge is the opposite of State of Charge
+                   depthOfDischarge = 1 - stateOfCharge(t,iPv,jBatt);            
+
+                   nMaxPartialCycles = cycles_to_failure(depthOfDischarge);
+
+                   sumPartialCyclesUsed(iPv, jBatt) ...
+                                    = sumPartialCyclesUsed(iPv, jBatt)...
+                                    + 1/(nMaxPartialCycles);
+                end
             end
             
             
